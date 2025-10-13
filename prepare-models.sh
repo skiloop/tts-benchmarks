@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Set environment variables for test text and reference files
-source /usr/local/etc/profile.d/conda.sh
+. /usr/local/etc/profile.d/conda.sh
 TEST_TEXT="My name is Dave, and um, I'm from London"
 REF_AUDIO=./samples/dave.wav
 REF_TEXT="./samples/dave.txt"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # create different environments for different models with conda
-source /usr/local/etc/profile.d/conda.sh
+. /usr/local/etc/profile.d/conda.sh
 neutts-air_path=${NEUTTS_AIR_PATH:-/content/neutts-air}
 apt-get install -y espeak time
 
