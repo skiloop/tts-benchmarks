@@ -1,0 +1,443 @@
+#!/usr/bin/env python3
+"""
+性能测试工具 - 使用 /usr/bin/time 测试和比较多种命令的性能
+"""
+
+import sys
+import subprocess
+import argparse
+import json
+import re
+import statistics
+from pathlib import Path
+from typing import List, Dict, Tuple
+from dataclasses import dataclass, asdict
+import time as time_module
+
+@dataclass
+class TimeResult:
+    """时间测试结果"""
+    real: float  # 实际运行时间（秒）
+    user: float  # 用户态CPU时间（秒）
+    sys: float   # 内核态CPU时间（秒）
+    
+    def total_cpu(self) -> float:
+        """总CPU时间"""
+        return self.user + self.sys
+
+@dataclass
+class TestResult:
+    """测试结果"""
+    name: str
+    command: str
+    runs: List[TimeResult]
+    success: bool
+    error_msg: str = ""
+    
+    def avg_real(self) -> float:
+        return statistics.mean([r.real for r in self.runs]) if self.runs else 0
+    
+    def avg_user(self) -> float:
+        return statistics.mean([r.user for r in self.runs]) if self.runs else 0
+    
+    def avg_sys(self) -> float:
+        return statistics.mean([r.sys for r in self.runs]) if self.runs else 0
+    
+    def avg_total_cpu(self) -> float:
+        return statistics.mean([r.total_cpu() for r in self.runs]) if self.runs else 0
+    
+    def std_real(self) -> float:
+        return statistics.stdev([r.real for r in self.runs]) if len(self.runs) > 1 else 0
+    
+    def min_real(self) -> float:
+        return min([r.real for r in self.runs]) if self.runs else 0
+    
+    def max_real(self) -> float:
+        return max([r.real for r in self.runs]) if self.runs else 0
+
+
+class Colors:
+    """终端颜色"""
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+    
+    @staticmethod
+    def disable():
+        """禁用颜色"""
+        Colors.HEADER = ''
+        Colors.BLUE = ''
+        Colors.CYAN = ''
+        Colors.GREEN = ''
+        Colors.YELLOW = ''
+        Colors.RED = ''
+        Colors.BOLD = ''
+        Colors.UNDERLINE = ''
+        Colors.END = ''
+
+
+def parse_time_output(output: str) -> TimeResult:
+    """解析 /usr/bin/time 的输出"""
+    # macOS 和 Linux 的 time 输出格式可能不同
+    # macOS: "0.00 real         0.00 user         0.00 sys"
+    # Linux: "0.00user 0.00system 0:00.00elapsed"
+    
+    real = user = sys = 0.0
+    
+    # 尝试匹配 macOS 格式
+    mac_pattern = r'(\d+\.\d+)\s+real\s+(\d+\.\d+)\s+user\s+(\d+\.\d+)\s+sys'
+    match = re.search(mac_pattern, output)
+    if match:
+        real = float(match.group(1))
+        user = float(match.group(2))
+        sys = float(match.group(3))
+        return TimeResult(real, user, sys)
+    
+    # 尝试匹配 Linux 格式
+    linux_pattern = r'(\d+\.\d+)user\s+(\d+\.\d+)system\s+(\d+):(\d+\.\d+)elapsed'
+    match = re.search(linux_pattern, output)
+    if match:
+        user = float(match.group(1))
+        sys = float(match.group(2))
+        minutes = int(match.group(3))
+        seconds = float(match.group(4))
+        real = minutes * 60 + seconds
+        return TimeResult(real, user, sys)
+    
+    # 尝试更通用的模式
+    real_match = re.search(r'(\d+\.\d+)\s*(?:real|elapsed)', output, re.IGNORECASE)
+    user_match = re.search(r'(\d+\.\d+)\s*user', output, re.IGNORECASE)
+    sys_match = re.search(r'(\d+\.\d+)\s*sys(?:tem)?', output, re.IGNORECASE)
+    
+    if real_match:
+        real = float(real_match.group(1))
+    if user_match:
+        user = float(user_match.group(1))
+    if sys_match:
+        sys = float(sys_match.group(1))
+    
+    return TimeResult(real, user, sys)
+
+
+def run_command_with_time(command: str, shell: bool = True, debug: bool = False) -> Tuple[TimeResult, bool, str]:
+    """使用 /usr/bin/time 运行命令"""
+    time_cmd = f"/usr/bin/time {command}" if shell else ["/usr/bin/time"] + command.split()
+    
+    try:
+        # /usr/bin/time 的输出通常在 stderr
+        result = subprocess.run(
+            time_cmd,
+            shell=shell,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        if debug:
+            print(f"  DEBUG - time stderr output:\n{result.stderr}")
+        
+        # 解析 time 输出
+        time_result = parse_time_output(result.stderr)
+        
+        if debug:
+            print(f"  DEBUG - parsed result: real={time_result.real}, user={time_result.user}, sys={time_result.sys}")
+        
+        return time_result, result.returncode == 0, ""
+        
+    except Exception as e:
+        return TimeResult(0, 0, 0), False, str(e)
+
+
+def run_test(name: str, command: str, iterations: int, verbose: bool = False, debug: bool = False) -> TestResult:
+    """运行性能测试"""
+    print(f"{Colors.CYAN}测试 [{name}]: {Colors.END}{command}")
+    
+    runs = []
+    success = True
+    error_msg = ""
+    
+    for i in range(iterations):
+        if verbose:
+            print(f"  运行 {i+1}/{iterations}...", end=' ', flush=True)
+        
+        time_result, cmd_success, error = run_command_with_time(command, debug=debug)
+        
+        if not cmd_success:
+            success = False
+            error_msg = error or "命令执行失败"
+            if verbose:
+                print(f"{Colors.RED}✗{Colors.END}")
+            break
+        
+        runs.append(time_result)
+        if verbose:
+            print(f"{Colors.GREEN}✓{Colors.END} ({time_result.real:.3f}s)")
+    
+    if not verbose and success:
+        print(f"  {Colors.GREEN}完成 {iterations} 次运行{Colors.END}")
+    elif not success:
+        print(f"  {Colors.RED}失败: {error_msg}{Colors.END}")
+    
+    return TestResult(name, command, runs, success, error_msg)
+
+
+def print_summary(results: List[TestResult]):
+    """打印测试摘要"""
+    print(f"\n{Colors.BOLD}{Colors.HEADER}{'='*80}{Colors.END}")
+    print(f"{Colors.BOLD}{Colors.HEADER}性能测试摘要{Colors.END}")
+    print(f"{Colors.BOLD}{Colors.HEADER}{'='*80}{Colors.END}\n")
+    
+    # 过滤成功的结果
+    successful_results = [r for r in results if r.success and r.runs]
+    
+    if not successful_results:
+        print(f"{Colors.RED}所有测试都失败了或没有有效的测试结果{Colors.END}")
+        return
+    
+    # 过滤掉时间为0的结果（time解析失败）
+    valid_results = [r for r in successful_results if r.avg_real() > 0]
+    
+    if not valid_results:
+        print(f"{Colors.RED}无法解析时间数据，请检查 /usr/bin/time 的输出格式{Colors.END}")
+        print(f"{Colors.YELLOW}提示: 某些系统的 time 命令格式可能不同{Colors.END}")
+        return
+    
+    # 找出最快的
+    fastest = min(valid_results, key=lambda r: r.avg_real())
+    
+    # 打印结果表格
+    print(f"{Colors.BOLD}{'名称':<20} {'实际时间':<15} {'用户时间':<15} {'系统时间':<15} {'相对速度':<10}{Colors.END}")
+    print("-" * 80)
+    
+    for result in sorted(valid_results, key=lambda r: r.avg_real()):
+        relative_speed = result.avg_real() / fastest.avg_real()
+        color = Colors.GREEN if result == fastest else Colors.END
+        
+        name_str = result.name[:18] + ".." if len(result.name) > 20 else result.name
+        real_str = f"{result.avg_real():.3f}s ±{result.std_real():.3f}"
+        user_str = f"{result.avg_user():.3f}s"
+        sys_str = f"{result.avg_sys():.3f}s"
+        rel_str = f"{relative_speed:.2f}x"
+        
+        print(f"{color}{name_str:<20} {real_str:<15} {user_str:<15} {sys_str:<15} {rel_str:<10}{Colors.END}")
+    
+    # 打印详细统计
+    print(f"\n{Colors.BOLD}详细统计:{Colors.END}")
+    for result in sorted(valid_results, key=lambda r: r.avg_real()):
+        print(f"\n{Colors.CYAN}{Colors.BOLD}[{result.name}]{Colors.END}")
+        print(f"  命令: {result.command}")
+        print(f"  平均实际时间: {result.avg_real():.3f}s (最小: {result.min_real():.3f}s, 最大: {result.max_real():.3f}s)")
+        print(f"  平均用户时间: {result.avg_user():.3f}s")
+        print(f"  平均系统时间: {result.avg_sys():.3f}s")
+        print(f"  平均CPU时间:  {result.avg_total_cpu():.3f}s")
+        if len(result.runs) > 1:
+            print(f"  标准差: {result.std_real():.3f}s")
+        
+        relative_to_fastest = result.avg_real() / fastest.avg_real()
+        if result == fastest:
+            print(f"  {Colors.GREEN}🏆 最快!{Colors.END}")
+        else:
+            slower_percent = (relative_to_fastest - 1) * 100
+            print(f"  比最快慢 {slower_percent:.1f}% ({relative_to_fastest:.2f}x)")
+    
+    # 打印失败的测试
+    failed_results = [r for r in results if not r.success]
+    if failed_results:
+        print(f"\n{Colors.RED}{Colors.BOLD}失败的测试:{Colors.END}")
+        for result in failed_results:
+            print(f"  {Colors.RED}✗{Colors.END} [{result.name}]: {result.error_msg}")
+
+
+def load_config(config_file: str) -> Dict:
+    """加载配置文件"""
+    config_path = Path(config_file)
+    if not config_path.exists():
+        print(f"{Colors.RED}错误: 配置文件不存在: {config_file}{Colors.END}")
+        sys.exit(1)
+    
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"{Colors.RED}错误: 配置文件格式错误: {e}{Colors.END}")
+        sys.exit(1)
+
+
+def save_results_json(results: List[TestResult], output_file: str):
+    """保存结果为 JSON"""
+    data = {
+        "timestamp": time_module.strftime("%Y-%m-%d %H:%M:%S"),
+        "results": [
+            {
+                "name": r.name,
+                "command": r.command,
+                "success": r.success,
+                "error_msg": r.error_msg,
+                "avg_real": r.avg_real(),
+                "avg_user": r.avg_user(),
+                "avg_sys": r.avg_sys(),
+                "std_real": r.std_real(),
+                "min_real": r.min_real(),
+                "max_real": r.max_real(),
+                "runs": [asdict(run) for run in r.runs]
+            }
+            for r in results
+        ]
+    }
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    
+    print(f"\n{Colors.GREEN}结果已保存到: {output_file}{Colors.END}")
+
+
+def create_sample_config(filename: str):
+    """创建示例配置文件"""
+    sample_config = {
+        "description": "性能测试配置示例",
+        "iterations": 3,
+        "tests": [
+            {
+                "name": "grep-standard",
+                "command": "grep -r 'pattern' /path/to/dir"
+            },
+            {
+                "name": "grep-perl",
+                "command": "grep -P -r 'pattern' /path/to/dir"
+            },
+            {
+                "name": "ripgrep",
+                "command": "rg 'pattern' /path/to/dir"
+            }
+        ]
+    }
+    
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(sample_config, f, indent=2, ensure_ascii=False)
+    
+    print(f"{Colors.GREEN}示例配置文件已创建: {filename}{Colors.END}")
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="性能测试工具 - 使用 /usr/bin/time 测试和比较多种命令的性能",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  # 从命令行指定命令
+  %(prog)s -c "sleep 1" -c "sleep 0.5" -n 3
+  
+  # 使用配置文件
+  %(prog)s -f config.json
+  
+  # 创建示例配置文件
+  %(prog)s --sample-config perftest.json
+  
+  # 指定命令名称
+  %(prog)s -t "slow,sleep 1" -t "fast,sleep 0.5" -n 5 -v
+  
+  # 保存结果
+  %(prog)s -f config.json -o results.json
+        """
+    )
+    
+    parser.add_argument('-c', '--command', action='append', dest='commands',
+                        help='要测试的命令（可多次指定）')
+    parser.add_argument('-t', '--test', action='append', dest='tests',
+                        help='命名测试，格式: "名称,命令"（可多次指定）')
+    parser.add_argument('-f', '--config', dest='config_file',
+                        help='从 JSON 配置文件加载测试')
+    parser.add_argument('-n', '--iterations', type=int, default=3,
+                        help='每个命令运行的次数（默认: 3）')
+    parser.add_argument('-o', '--output', dest='output_file',
+                        help='保存结果到 JSON 文件')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='详细输出每次运行的结果')
+    parser.add_argument('--debug', action='store_true',
+                        help='调试模式，显示 time 命令的原始输出')
+    parser.add_argument('--no-color', action='store_true',
+                        help='禁用彩色输出')
+    parser.add_argument('--sample-config', dest='sample_config',
+                        help='创建示例配置文件')
+    
+    args = parser.parse_args()
+    
+    # 禁用颜色
+    if args.no_color:
+        Colors.disable()
+    
+    # 创建示例配置
+    if args.sample_config:
+        create_sample_config(args.sample_config)
+        return
+    
+    # 收集测试任务
+    tests = []
+    
+    # 从命令行参数
+    if args.commands:
+        for i, cmd in enumerate(args.commands):
+            tests.append({
+                'name': f'command-{i+1}',
+                'command': cmd
+            })
+    
+    # 从命名测试
+    if args.tests:
+        for test_str in args.tests:
+            parts = test_str.split(',', 1)
+            if len(parts) != 2:
+                print(f"{Colors.RED}错误: 测试格式错误: {test_str}{Colors.END}")
+                print(f"应该是: '名称,命令'")
+                sys.exit(1)
+            tests.append({
+                'name': parts[0].strip(),
+                'command': parts[1].strip()
+            })
+    
+    # 从配置文件
+    if args.config_file:
+        config = load_config(args.config_file)
+        if 'tests' in config:
+            tests.extend(config['tests'])
+        if 'iterations' in config and not args.iterations != 3:  # 如果没有命令行指定
+            args.iterations = config['iterations']
+    
+    # 验证
+    if not tests:
+        parser.print_help()
+        print(f"\n{Colors.RED}错误: 请至少指定一个测试命令{Colors.END}")
+        sys.exit(1)
+    
+    # 打印测试信息
+    print(f"{Colors.BOLD}{Colors.HEADER}性能测试工具{Colors.END}")
+    print(f"总共 {len(tests)} 个测试，每个运行 {args.iterations} 次\n")
+    
+    # 运行测试
+    results = []
+    for i, test in enumerate(tests, 1):
+        print(f"\n{Colors.BOLD}[{i}/{len(tests)}]{Colors.END}")
+        result = run_test(test['name'], test['command'], args.iterations, args.verbose, args.debug)
+        results.append(result)
+    
+    # 打印摘要
+    print_summary(results)
+    
+    # 保存结果
+    if args.output_file:
+        save_results_json(results, args.output_file)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(f"\n{Colors.YELLOW}测试被中断{Colors.END}")
+        sys.exit(130)
+
