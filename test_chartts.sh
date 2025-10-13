@@ -1,79 +1,78 @@
 #!/bin/bash
-# ChatTTS 命令行客户端测试脚本
+# ChatTTS Command Line Client Test Script
 
 set -e
 
 echo "=================================="
-echo "ChatTTS 命令行客户端测试"
+echo "ChatTTS Command Line Client Tests"
 echo "=================================="
 echo
 
-# 检查 chartts 是否可用
+# Check if chartts is available
 if ! command -v chartts &> /dev/null; then
-    echo "错误: chartts 命令不可用"
-    echo "请先运行: ./install.sh"
+    echo "Error: chartts command not available"
+    echo "Please run: ./install.sh"
     exit 1
 fi
 
-# 创建临时目录
+# Create temporary directory
 TEST_DIR="/tmp/chartts_test_$$"
 mkdir -p "$TEST_DIR"
-echo "测试目录: $TEST_DIR"
+echo "Test directory: $TEST_DIR"
 echo
 
-# 测试1: 基本文本转语音
-echo "测试1: 基本文本转语音"
-chartts -t "你好世界" -o "$TEST_DIR/test1.wav" -v
+# Test 1: Basic text to speech
+echo "Test 1: Basic text to speech"
+chartts -t "Hello World" -o "$TEST_DIR/test1.wav" -v
 if [ -f "$TEST_DIR/test1.wav" ]; then
-    echo "✓ 测试1通过"
+    echo "✓ Test 1 passed"
 else
-    echo "✗ 测试1失败"
+    echo "✗ Test 1 failed"
     exit 1
 fi
 echo
 
-# 测试2: 从文件读取
-echo "测试2: 从文件读取文本"
-echo "这是一段测试文本，用于验证从文件读取功能。" > "$TEST_DIR/input.txt"
+# Test 2: Read from file
+echo "Test 2: Read text from file"
+echo "This is a test text to verify the file reading feature." > "$TEST_DIR/input.txt"
 chartts -f "$TEST_DIR/input.txt" -o "$TEST_DIR/test2.wav" -v
 if [ -f "$TEST_DIR/test2.wav" ]; then
-    echo "✓ 测试2通过"
+    echo "✓ Test 2 passed"
 else
-    echo "✗ 测试2失败"
+    echo "✗ Test 2 failed"
     exit 1
 fi
 echo
 
-# 测试3: 指定说话人
-echo "测试3: 指定说话人"
-chartts -t "测试不同的音色" -o "$TEST_DIR/test3.wav" --speaker 123 -v
+# Test 3: Specify speaker
+echo "Test 3: Custom speaker"
+chartts -t "Test different voice" -o "$TEST_DIR/test3.wav" --speaker 123 -v
 if [ -f "$TEST_DIR/test3.wav" ]; then
-    echo "✓ 测试3通过"
+    echo "✓ Test 3 passed"
 else
-    echo "✗ 测试3失败"
+    echo "✗ Test 3 failed"
     exit 1
 fi
 echo
 
-# 测试4: 调整参数
-echo "测试4: 调整生成参数"
-chartts -t "测试参数调整" -o "$TEST_DIR/test4.wav" --temperature 0.5 --top-p 0.8 -v
+# Test 4: Adjust parameters
+echo "Test 4: Adjust generation parameters"
+chartts -t "Test parameter adjustment" -o "$TEST_DIR/test4.wav" --temperature 0.5 --top-p 0.8 -v
 if [ -f "$TEST_DIR/test4.wav" ]; then
-    echo "✓ 测试4通过"
+    echo "✓ Test 4 passed"
 else
-    echo "✗ 测试4失败"
+    echo "✗ Test 4 failed"
     exit 1
 fi
 echo
 
 echo "=================================="
-echo "所有测试通过！"
+echo "All tests passed!"
 echo "=================================="
 echo
-echo "生成的音频文件："
+echo "Generated audio files:"
 ls -lh "$TEST_DIR"/*.wav
 echo
-echo "清理测试文件..."
+echo "Cleaning up test files..."
 rm -rf "$TEST_DIR"
-echo "完成！"
-
+echo "Done!"

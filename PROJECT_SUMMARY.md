@@ -1,373 +1,372 @@
-# 项目总结 - ChatTTS 命令行客户端
+# Project Summary - ChatTTS Command Line Client
 
-## 📋 已完成的工作
+## 📋 Completed Work
 
-### ✅ 核心功能
+### ✅ Core Features
 
-1. **chartts 命令行客户端** (`scripts/chartts`)
-   - 完整的 ChatTTS 命令行接口
-   - 支持文本输入和文件输入
-   - 支持音色、参数、设备等配置
-   - 详细的错误处理和日志输出
-   - 220+ 行高质量Python代码
+1. **chartts Command Line Client** (`scripts/chartts`)
+   - Complete ChatTTS command line interface
+   - Support for text input and file input
+   - Support for voice, parameters, device configuration
+   - Detailed error handling and logging output
+   - 220+ lines of high-quality Python code
 
-2. **性能测试工具** (`scripts/perftest`)
-   - 已存在的工具，用于性能测评
-   - 支持多命令并行测试
-   - JSON配置和输出
-   - 440+ 行功能完善的代码
+2. **Performance Testing Tool** (`scripts/perftest`)
+   - Existing tool for performance benchmarking
+   - Support for parallel testing of multiple commands
+   - JSON configuration and output
+   - 440+ lines of well-featured code
 
-### 📚 文档 (5个文档文件)
+### 📚 Documentation (5 documentation files)
 
-1. **README.md** - 主文档
-   - 项目介绍和特性
-   - 完整的使用说明
-   - 参数详解
-   - 故障排除
+1. **README.md** - Main documentation
+   - Project introduction and features
+   - Complete usage guide
+   - Parameter reference
+   - Troubleshooting
 
-2. **QUICKSTART.md** - 快速入门
-   - 10个章节的详细指南
-   - 从安装到高级使用
-   - 常见问题解答
-   - 脚本和Python集成示例
+2. **QUICKSTART.md** - Quick start guide
+   - Detailed guide with 10 sections
+   - From installation to advanced usage
+   - Common questions and answers
+   - Script and Python integration examples
 
-3. **INSTALL.md** - 安装说明
-   - 详细的安装步骤
-   - 多种安装方法
-   - 完整的故障排除
-   - 卸载和更新指南
+3. **INSTALL.md** - Installation guide
+   - Detailed installation steps
+   - Multiple installation methods
+   - Complete troubleshooting
+   - Uninstallation and update guide
 
-4. **CHANGELOG.md** - 更新日志
-   - 版本 1.0.0 的所有新功能
-   - 项目结构说明
-   - 未来计划路线图
+4. **CHANGELOG.md** - Changelog
+   - All new features in version 1.0.0
+   - Project structure description
+   - Future roadmap
 
-5. **examples/README.md** - 示例说明
-   - 示例脚本使用指南
-   - 使用技巧和最佳实践
-   - 自定义示例模板
+5. **examples/README.md** - Examples guide
+   - Example script usage guide
+   - Tips and best practices
+   - Custom example templates
 
-### 🎯 示例脚本 (3个示例)
+### 🎯 Example Scripts (3 examples)
 
 1. **examples/simple_usage.sh**
-   - 基本使用演示
-   - 不同说话人测试
-   - 参数调整示例
+   - Basic usage demonstration
+   - Different speaker testing
+   - Parameter adjustment examples
 
 2. **examples/batch_process.sh**
-   - 批量处理演示
-   - 自动化工作流
-   - 文件组织
+   - Batch processing demonstration
+   - Automated workflow
+   - File organization
 
 3. **examples/benchmark_comparison.sh**
-   - 性能测评完整流程
-   - 结果分析和可视化
-   - 交互式清理
+   - Complete performance benchmarking workflow
+   - Result analysis and visualization
+   - Interactive cleanup
 
-### 🧪 测试和配置
+### 🧪 Tests and Configuration
 
-1. **test_chartts.sh** - 功能测试脚本
-   - 4个测试用例
-   - 自动验证
-   - 清理功能
+1. **test_chartts.sh** - Functional test script
+   - 4 test cases
+   - Automatic validation
+   - Cleanup functionality
 
-2. **tts-benchmark-example.json** - 测评配置示例
-   - 4种测试场景
-   - 可直接使用
+2. **tts-benchmark-example.json** - Benchmark configuration example
+   - 4 test scenarios
+   - Ready to use
 
-3. **requirements.txt** - Python依赖
-   - ChatTTS 和相关库
-   - 清晰的版本要求
+3. **requirements.txt** - Python dependencies
+   - ChatTTS and related libraries
+   - Clear version requirements
 
-4. **.gitignore** - Git忽略规则
-   - Python 临时文件
-   - 测试输出
-   - 模型缓存
+4. **.gitignore** - Git ignore rules
+   - Python temporary files
+   - Test outputs
+   - Model cache
 
-### 🛠️ 工具脚本
+### 🛠️ Utility Scripts
 
-1. **install.sh** - 安装脚本
-   - 自动链接命令到PATH
-   - 支持自定义路径
+1. **install.sh** - Installation script
+   - Auto-link commands to PATH
+   - Support custom paths
 
-## 📊 项目统计
+## 📊 Project Statistics
 
-- **代码行数**: 660+ 行 (chartts + perftest)
-- **文档页数**: 5 个主要文档
-- **示例脚本**: 3 个完整示例
-- **测试用例**: 4 个功能测试
-- **文件总数**: 15+ 个文件
+- **Lines of Code**: 660+ lines (chartts + perftest)
+- **Documentation Pages**: 5 main documents
+- **Example Scripts**: 3 complete examples
+- **Test Cases**: 4 functional tests
+- **Total Files**: 15+ files
 
-## 🎯 使用流程
+## 🎯 Usage Workflow
 
-### 1. 首次使用（3步）
+### 1. First-time Setup (3 steps)
 
 ```bash
-# 步骤1: 安装依赖
+# Step 1: Install dependencies
 pip install -r requirements.txt
 
-# 步骤2: 安装工具
+# Step 2: Install tools
 ./install.sh
 
-# 步骤3: 测试
-chartts -t "你好世界" -o hello.wav
+# Step 3: Test
+chartts -t "Hello World" -o hello.wav
 ```
 
-### 2. 日常使用
+### 2. Daily Usage
 
 ```bash
-# 简单转换
-chartts -t "要说的话" -o output.wav
+# Simple conversion
+chartts -t "Text to speak" -o output.wav
 
-# 批量处理
+# Batch processing
 ./examples/batch_process.sh
 
-# 性能测评
+# Performance benchmarking
 perftest -f tts-benchmark-example.json
 ```
 
-### 3. 高级用法
+### 3. Advanced Usage
 
 ```bash
-# 指定音色和参数
-chartts -t "测试" -o test.wav --speaker 42 --temperature 0.3
+# Specify voice and parameters
+chartts -t "Test" -o test.wav --speaker 42 --temperature 0.3
 
-# 高质量生成
-chartts -t "测试" -o test.wav --refine
+# High-quality generation
+chartts -t "Test" -o test.wav --refine
 
-# 性能对比
+# Performance comparison
 ./examples/benchmark_comparison.sh
 ```
 
-## ✨ 主要特性
+## ✨ Key Features
 
-### chartts 命令行客户端
+### chartts Command Line Client
 
-✅ **输入灵活**
-- 命令行参数输入 (`-t`)
-- 文件输入 (`-f`)
-- 标准输入（可扩展）
+✅ **Flexible Input**
+- Command line argument input (`-t`)
+- File input (`-f`)
+- Standard input (extensible)
 
-✅ **参数丰富**
-- 说话人控制 (`--speaker`)
-- 温度参数 (`--temperature`)
-- Top-P/Top-K 采样
-- 文本优化 (`--refine`)
-- 采样率自定义
+✅ **Rich Parameters**
+- Speaker control (`--speaker`)
+- Temperature parameter (`--temperature`)
+- Top-P/Top-K sampling
+- Text refinement (`--refine`)
+- Custom sample rate
 
-✅ **设备支持**
-- 自动检测最佳设备
-- CPU、CUDA、MPS支持
-- torch.compile 加速
+✅ **Device Support**
+- Auto-detect best device
+- CPU, CUDA, MPS support
+- torch.compile acceleration
 
-✅ **用户友好**
-- 详细的帮助信息
-- 清晰的错误提示
-- 可选的详细输出模式
-- 进度显示
+✅ **User-friendly**
+- Detailed help information
+- Clear error messages
+- Optional verbose output mode
+- Progress display
 
-✅ **质量保证**
-- 完整的错误处理
-- 输入验证
-- 路径自动创建
-- 编码支持
+✅ **Quality Assurance**
+- Complete error handling
+- Input validation
+- Automatic path creation
+- Encoding support
 
-### perftest 性能测试工具
+### perftest Performance Testing Tool
 
-✅ **准确测量**
-- 使用 /usr/bin/time
-- 多次迭代统计
-- 标准差计算
+✅ **Accurate Measurement**
+- Uses /usr/bin/time
+- Multiple iteration statistics
+- Standard deviation calculation
 
-✅ **灵活配置**
-- JSON配置文件
-- 命令行参数
-- 批量测试
+✅ **Flexible Configuration**
+- JSON configuration files
+- Command line arguments
+- Batch testing
 
-✅ **结果丰富**
-- 彩色终端输出
-- JSON 格式保存
-- 详细统计信息
+✅ **Rich Results**
+- Colored terminal output
+- JSON format saving
+- Detailed statistics
 
-## 📁 完整的文件结构
+## 📁 Complete File Structure
 
 ```
 tts-benchmarks/
-├── README.md                       # 主文档 ⭐
-├── QUICKSTART.md                   # 快速入门 ⭐
-├── INSTALL.md                      # 安装说明 ⭐
-├── CHANGELOG.md                    # 更新日志 ⭐
-├── PROJECT_SUMMARY.md              # 本文件 ⭐
-├── install.sh                      # 安装脚本 🔧
-├── test_chartts.sh                 # 测试脚本 🧪
-├── requirements.txt                # Python依赖 📦
-├── tts-benchmark-example.json      # 测评配置 ⚙️
-├── .gitignore                      # Git配置 🚫
+├── README.md                       # Main documentation ⭐
+├── QUICKSTART.md                   # Quick start guide ⭐
+├── INSTALL.md                      # Installation guide ⭐
+├── CHANGELOG.md                    # Changelog ⭐
+├── PROJECT_SUMMARY.md              # This file ⭐
+├── install.sh                      # Installation script 🔧
+├── test_chartts.sh                 # Test script 🧪
+├── requirements.txt                # Python dependencies 📦
+├── tts-benchmark-example.json      # Benchmark config ⚙️
+├── .gitignore                      # Git config 🚫
 ├── scripts/
-│   ├── chartts                     # ChatTTS客户端 ⭐⭐⭐
-│   └── perftest                    # 性能测试工具 ⭐⭐
+│   ├── chartts                     # ChatTTS client ⭐⭐⭐
+│   └── perftest                    # Performance tool ⭐⭐
 └── examples/
-    ├── README.md                   # 示例说明 📖
-    ├── simple_usage.sh             # 简单示例 📝
-    ├── batch_process.sh            # 批量处理 📝
-    └── benchmark_comparison.sh     # 性能对比 📝
+    ├── README.md                   # Examples guide 📖
+    ├── simple_usage.sh             # Simple example 📝
+    ├── batch_process.sh            # Batch processing 📝
+    └── benchmark_comparison.sh     # Performance comparison 📝
 ```
 
-## 🎓 学习路径
+## 🎓 Learning Path
 
-### 初学者
-1. 阅读 [QUICKSTART.md](QUICKSTART.md)
-2. 运行 `./test_chartts.sh`
-3. 尝试 `./examples/simple_usage.sh`
+### For Beginners
+1. Read [QUICKSTART.md](QUICKSTART.md)
+2. Run `./test_chartts.sh`
+3. Try `./examples/simple_usage.sh`
 
-### 进阶用户
-1. 阅读 [README.md](README.md) 的完整文档
-2. 自定义 `tts-benchmark-example.json`
-3. 编写自己的批处理脚本
+### For Intermediate Users
+1. Read complete [README.md](README.md) documentation
+2. Customize `tts-benchmark-example.json`
+3. Write your own batch processing scripts
 
-### 高级用户
-1. 研究 `scripts/chartts` 源码
-2. 集成到自己的项目
-3. 贡献新功能或示例
+### For Advanced Users
+1. Study `scripts/chartts` source code
+2. Integrate into your own projects
+3. Contribute new features or examples
 
-## 🔍 关键实现细节
+## 🔍 Key Implementation Details
 
-### chartts 核心功能
+### chartts Core Features
 
-1. **参数解析** (argparse)
-   - 互斥的输入选项
-   - 丰富的可选参数
-   - 详细的帮助信息
+1. **Argument Parsing** (argparse)
+   - Mutually exclusive input options
+   - Rich optional parameters
+   - Detailed help information
 
-2. **设备选择**
+2. **Device Selection**
    ```python
    if args.device == 'auto':
-       # 自动检测CUDA/MPS/CPU
+       # Auto-detect CUDA/MPS/CPU
    ```
 
-3. **模型加载**
+3. **Model Loading**
    ```python
    chat = ChatTTS.Chat()
    chat.load(compile=args.compile, device=device)
    ```
 
-4. **音频生成**
+4. **Audio Generation**
    ```python
-   # 可选的文本优化
+   # Optional text refinement
    if args.refine:
        texts = chat.infer(..., refine_text_only=True)
    
-   # 生成音频
+   # Generate audio
    wavs = chat.infer(texts, params_infer_code=params)
    ```
 
-5. **保存音频**
+5. **Save Audio**
    ```python
    audio_data = torch.from_numpy(wavs[0]).unsqueeze(0)
    torchaudio.save(output_path, audio_data, sample_rate)
    ```
 
-### 错误处理策略
+### Error Handling Strategy
 
-1. **导入检查** - 清晰的依赖缺失提示
-2. **文件检查** - 输入文件存在性验证
-3. **空文本检查** - 防止无效输入
-4. **异常捕获** - 友好的错误消息
+1. **Import Check** - Clear missing dependency messages
+2. **File Check** - Input file existence validation
+3. **Empty Text Check** - Prevent invalid input
+4. **Exception Catching** - Friendly error messages
 
-## 🎯 适用场景
+## 🎯 Use Cases
 
-### 1. 个人使用
-- 快速生成语音
-- 测试不同音色
-- 批量转换文本
+### 1. Personal Use
+- Quick speech generation
+- Test different voices
+- Batch text conversion
 
-### 2. 项目集成
-- CI/CD 自动化测试
-- 批处理脚本
-- 性能监控
+### 2. Project Integration
+- CI/CD automated testing
+- Batch processing scripts
+- Performance monitoring
 
-### 3. 研究和开发
-- TTS 系统对比
-- 参数调优
-- 性能基准测试
+### 3. Research and Development
+- TTS system comparison
+- Parameter optimization
+- Performance benchmarking
 
-### 4. 教育和演示
-- 教学示例
-- 技术演示
-- 功能展示
+### 4. Education and Demonstration
+- Teaching examples
+- Technical demonstrations
+- Feature showcasing
 
-## 🚀 下一步建议
+## 🚀 Next Steps Suggestions
 
-### 立即可以做的
+### Immediate Actions
 
-1. **安装并测试**
+1. **Install and Test**
    ```bash
    pip install -r requirements.txt
    ./install.sh
    ./test_chartts.sh
    ```
 
-2. **生成第一个语音**
+2. **Generate First Speech**
    ```bash
-   chartts -t "这是我的第一个语音" -o first.wav
+   chartts -t "This is my first speech" -o first.wav
    ```
 
-3. **运行性能测试**
+3. **Run Performance Test**
    ```bash
    perftest -f tts-benchmark-example.json
    ```
 
-### 进阶探索
+### Advanced Exploration
 
-1. **尝试不同说话人**
+1. **Try Different Speakers**
    ```bash
    for i in {1..5}; do
-       chartts -t "测试音色$i" -o "voice_$i.wav" --speaker $((i*100))
+       chartts -t "Test voice $i" -o "voice_$i.wav" --speaker $((i*100))
    done
    ```
 
-2. **批量处理项目**
-   - 编写自己的批处理脚本
-   - 自动化工作流程
+2. **Batch Processing Projects**
+   - Write your own batch processing scripts
+   - Automate workflows
 
-3. **性能优化**
-   - 测试不同设备（CPU/GPU）
-   - 使用 --compile 加速
-   - 调整参数找到最佳配置
+3. **Performance Optimization**
+   - Test different devices (CPU/GPU)
+   - Use --compile for acceleration
+   - Adjust parameters to find optimal configuration
 
-### 自定义和扩展
+### Customization and Extension
 
-1. **添加新功能**
-   - 支持更多音频格式
-   - 添加音频后处理
-   - Web界面
+1. **Add New Features**
+   - Support more audio formats
+   - Add audio post-processing
+   - Web interface
 
-2. **集成到现有项目**
-   - 作为子模块使用
-   - API封装
-   - 微服务化
+2. **Integrate into Existing Projects**
+   - Use as submodule
+   - API wrapper
+   - Microservice architecture
 
-3. **贡献代码**
-   - 提交bug修复
-   - 添加新示例
-   - 改进文档
+3. **Contribute Code**
+   - Submit bug fixes
+   - Add new examples
+   - Improve documentation
 
-## 📞 获取帮助
+## 📞 Get Help
 
-- 📖 查看文档：所有 `.md` 文件
-- 💬 提交Issue：报告问题或建议
-- 🤝 贡献代码：Fork + Pull Request
-- ❓ 命令帮助：`chartts --help` 或 `perftest --help`
+- 📖 View documentation: All `.md` files
+- 💬 Submit Issue: Report problems or suggestions
+- 🤝 Contribute code: Fork + Pull Request
+- ❓ Command help: `chartts --help` or `perftest --help`
 
-## 🎉 总结
+## 🎉 Summary
 
-现在你拥有了一个功能完整的 TTS 测评工具集！
+You now have a fully-featured TTS benchmarking toolkit!
 
-- ✅ **chartts**: 功能丰富的 ChatTTS 命令行客户端
-- ✅ **perftest**: 专业的性能测试工具  
-- ✅ **完整文档**: 从安装到高级使用
-- ✅ **实用示例**: 开箱即用的脚本
-- ✅ **测试脚本**: 验证功能正常
+- ✅ **chartts**: Feature-rich ChatTTS command line client
+- ✅ **perftest**: Professional performance testing tool
+- ✅ **Complete Documentation**: From installation to advanced usage
+- ✅ **Practical Examples**: Ready-to-use scripts
+- ✅ **Test Scripts**: Verify functionality
 
-**开始使用吧！** 🚀
-
+**Get started now!** 🚀

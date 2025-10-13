@@ -1,64 +1,64 @@
 #!/bin/bash
-# 性能对比测试示例
+# Performance Benchmark Comparison Example
 
 set -e
 
-# 测试文本
-TEST_TEXT="这是一段用于性能测试的文本，包含足够的长度以便准确测量处理时间。"
+# Test text
+TEST_TEXT="This is a text for performance testing, with sufficient length to accurately measure processing time."
 
-echo "=== TTS性能对比测试 ==="
-echo "测试文本: $TEST_TEXT"
+echo "=== TTS Performance Comparison Test ==="
+echo "Test text: $TEST_TEXT"
 echo
 
-# 创建临时目录
+# Create temporary directory
 TEMP_DIR="/tmp/tts_benchmark_$$"
 mkdir -p "$TEMP_DIR"
 
-echo "临时目录: $TEMP_DIR"
+echo "Temporary directory: $TEMP_DIR"
 echo
 
-# 测试不同配置的性能
-echo "创建测试配置..."
+# Test different configurations for performance
+echo "Creating test configuration..."
 cat > "$TEMP_DIR/benchmark.json" << EOF
 {
-  "description": "ChatTTS性能对比",
+  "description": "ChatTTS Performance Comparison",
   "iterations": 5,
   "tests": [
     {
-      "name": "默认配置",
+      "name": "Default Config",
       "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/default.wav"
     },
     {
-      "name": "低温度",
+      "name": "Low Temperature",
       "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/low_temp.wav --temperature 0.1"
     },
     {
-      "name": "高温度",
+      "name": "High Temperature",
       "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/high_temp.wav --temperature 0.5"
     },
     {
-      "name": "使用refine",
+      "name": "With Refine",
       "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/refine.wav --refine"
     },
     {
-      "name": "CPU模式",
+      "name": "CPU Mode",
       "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/cpu.wav --device cpu"
     }
   ]
 }
 EOF
 
-# 运行性能测试
-echo "运行性能测试..."
+# Run performance test
+echo "Running performance test..."
 perftest -f "$TEMP_DIR/benchmark.json" -o "$TEMP_DIR/results.json" -v
 
 echo
-echo "结果已保存到: $TEMP_DIR/results.json"
+echo "Results saved to: $TEMP_DIR/results.json"
 echo
 
-# 显示结果摘要
+# Display result summary
 if [ -f "$TEMP_DIR/results.json" ]; then
-    echo "=== 结果摘要 ==="
+    echo "=== Result Summary ==="
     python3 << 'PYTHON'
 import json
 import sys
@@ -67,8 +67,8 @@ try:
     with open(sys.argv[1], 'r') as f:
         data = json.load(f)
     
-    print(f"测试时间: {data['timestamp']}")
-    print(f"\n{'名称':<20} {'平均时间':<15} {'最小时间':<15} {'最大时间':<15}")
+    print(f"Test time: {data['timestamp']}")
+    print(f"\n{'Name':<20} {'Avg Time':<15} {'Min Time':<15} {'Max Time':<15}")
     print("-" * 70)
     
     for result in sorted(data['results'], key=lambda x: x['avg_real']):
@@ -77,19 +77,18 @@ try:
             print(f"{name:<20} {result['avg_real']:.3f}s {' '*8} {result['min_real']:.3f}s {' '*8} {result['max_real']:.3f}s")
     
 except Exception as e:
-    print(f"无法解析结果: {e}", file=sys.stderr)
+    print(f"Cannot parse results: {e}", file=sys.stderr)
 PYTHON
     python3 - "$TEMP_DIR/results.json"
 fi
 
-# 清理（可选）
+# Cleanup (optional)
 echo
-read -p "是否删除临时文件？(y/N) " -n 1 -r
+read -p "Delete temporary files? (y/N) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     rm -rf "$TEMP_DIR"
-    echo "已清理临时文件"
+    echo "Temporary files cleaned up"
 else
-    echo "临时文件保留在: $TEMP_DIR"
+    echo "Temporary files kept in: $TEMP_DIR"
 fi
-

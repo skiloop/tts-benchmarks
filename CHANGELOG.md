@@ -1,106 +1,105 @@
-# 更新日志
+# Changelog
 
 ## [1.0.0] - 2024-10-13
 
-### 新增功能
+### New Features
 
-#### ChatTTS 命令行客户端 (`chartts`)
-- ✨ 完整的命令行接口，支持文本转语音
-- 📝 支持从命令行参数或文件读取文本
-- 🎤 支持自定义说话人（音色控制）
-- 🔧 支持调整温度、Top-P、Top-K等参数
-- ✨ 支持文本优化（refine）提高质量
-- 💻 支持多种设备：CPU、CUDA、MPS（Apple Silicon）
-- 🚀 支持torch.compile加速
-- 📊 支持自定义采样率
-- 🐛 详细的错误处理和调试输出
+#### ChatTTS Command Line Client (`chartts`)
+- ✨ Complete command line interface supporting text-to-speech
+- 📝 Support reading text from command line arguments or files
+- 🎤 Support custom speaker (voice control)
+- 🔧 Support adjusting temperature, Top-P, Top-K and other parameters
+- ✨ Support text refinement to improve quality
+- 💻 Support multiple devices: CPU, CUDA, MPS (Apple Silicon)
+- 🚀 Support torch.compile acceleration
+- 📊 Support custom sample rate
+- 🐛 Detailed error handling and debug output
 
-#### 性能测试工具 (`perftest`)
-- ⚡ 使用 /usr/bin/time 进行精确的性能测量
-- 📊 支持多个命令的并行测试
-- 📈 详细的统计信息（平均、最小、最大、标准差）
-- 💾 支持JSON格式输出测试结果
-- 🎨 彩色终端输出，清晰的可视化
-- 📝 支持从JSON配置文件加载测试
-- 🔄 支持多次迭代测试
+#### Performance Testing Tool (`perftest`)
+- ⚡ Precise performance measurement using /usr/bin/time
+- 📊 Support parallel testing of multiple commands
+- 📈 Detailed statistics (average, min, max, standard deviation)
+- 💾 Support JSON format output for test results
+- 🎨 Colored terminal output with clear visualization
+- 📝 Support loading tests from JSON configuration files
+- 🔄 Support multiple iteration testing
 
-### 文档
+### Documentation
 
-- 📖 完整的 README.md 文档
-- 🚀 QUICKSTART.md 快速入门指南
-- 💿 INSTALL.md 详细安装说明
-- 📋 CHANGELOG.md 更新日志
+- 📖 Complete README.md documentation
+- 🚀 QUICKSTART.md quick start guide
+- 💿 INSTALL.md detailed installation guide
+- 📋 CHANGELOG.md changelog
 
-### 示例
+### Examples
 
-- 📁 `examples/simple_usage.sh` - 简单使用示例
-- 📁 `examples/batch_process.sh` - 批量处理示例
-- 📁 `examples/benchmark_comparison.sh` - 性能对比示例
-- 📁 `tts-benchmark-example.json` - 测评配置示例
+- 📁 `examples/simple_usage.sh` - Simple usage examples
+- 📁 `examples/batch_process.sh` - Batch processing examples
+- 📁 `examples/benchmark_comparison.sh` - Performance comparison examples
+- 📁 `tts-benchmark-example.json` - Benchmark configuration example
 
-### 测试
+### Tests
 
-- ✅ `test_chartts.sh` - 完整的功能测试脚本
+- ✅ `test_chartts.sh` - Complete functional test script
 
-### 工具
+### Tools
 
-- 🔧 `install.sh` - 自动安装脚本
-- 📦 `requirements.txt` - Python依赖管理
+- 🔧 `install.sh` - Automated installation script
+- 📦 `requirements.txt` - Python dependency management
 
-### 项目结构
+### Project Structure
 
 ```
 tts-benchmarks/
-├── README.md                       # 项目主文档
-├── QUICKSTART.md                   # 快速入门指南
-├── INSTALL.md                      # 安装说明
-├── CHANGELOG.md                    # 更新日志
-├── install.sh                      # 安装脚本
-├── requirements.txt                # Python依赖
-├── test_chartts.sh                 # 测试脚本
-├── tts-benchmark-example.json      # 测评配置示例
-├── .gitignore                      # Git忽略文件
+├── README.md                       # Main project documentation
+├── QUICKSTART.md                   # Quick start guide
+├── INSTALL.md                      # Installation guide
+├── CHANGELOG.md                    # Changelog
+├── install.sh                      # Installation script
+├── requirements.txt                # Python dependencies
+├── test_chartts.sh                 # Test script
+├── tts-benchmark-example.json      # Benchmark configuration example
+├── .gitignore                      # Git ignore file
 ├── scripts/
-│   ├── chartts                     # ChatTTS命令行客户端
-│   └── perftest                    # 性能测试工具
+│   ├── chartts                     # ChatTTS command line client
+│   └── perftest                    # Performance testing tool
 └── examples/
-    ├── simple_usage.sh             # 简单使用示例
-    ├── batch_process.sh            # 批量处理示例
-    └── benchmark_comparison.sh     # 性能对比示例
+    ├── simple_usage.sh             # Simple usage example
+    ├── batch_process.sh            # Batch processing example
+    └── benchmark_comparison.sh     # Performance comparison example
 ```
 
-## 未来计划
+## Future Plans
 
-### 短期计划 (v1.1.0)
-- [ ] 添加更多TTS引擎的命令行客户端
-- [ ] 支持更多音频格式（MP3、FLAC等）
-- [ ] 添加音频后处理功能（降噪、标准化等）
-- [ ] Web界面支持
+### Short-term Plans (v1.1.0)
+- [ ] Add command line clients for more TTS engines
+- [ ] Support more audio formats (MP3, FLAC, etc.)
+- [ ] Add audio post-processing features (noise reduction, normalization, etc.)
+- [ ] Web interface support
 
-### 中期计划 (v1.2.0)
-- [ ] 支持流式音频生成
-- [ ] 添加语音克隆功能
-- [ ] 多语言支持
-- [ ] Docker容器化
+### Mid-term Plans (v1.2.0)
+- [ ] Support streaming audio generation
+- [ ] Add voice cloning features
+- [ ] Multi-language support
+- [ ] Docker containerization
 
-### 长期计划 (v2.0.0)
-- [ ] 分布式测试支持
-- [ ] 自动化CI/CD集成
-- [ ] 详细的测评报告生成
-- [ ] 数据库存储测试结果
+### Long-term Plans (v2.0.0)
+- [ ] Distributed testing support
+- [ ] Automated CI/CD integration
+- [ ] Detailed benchmark report generation
+- [ ] Database storage for test results
 
-## 贡献者
+## Contributors
 
-- [@skiloop](https://github.com/skiloop) - 项目创建者和主要维护者
+- [@skiloop](https://github.com/skiloop) - Project creator and main maintainer
 
-## 反馈和建议
+## Feedback and Suggestions
 
-如有任何问题、建议或功能请求，欢迎：
-1. 提交 GitHub Issue
-2. 提交 Pull Request
-3. 联系维护者
+For any questions, suggestions, or feature requests:
+1. Submit a GitHub Issue
+2. Submit a Pull Request
+3. Contact the maintainer
 
 ---
 
-**注**: 本项目遵循[语义化版本](https://semver.org/)规范。
-
+**Note**: This project follows [Semantic Versioning](https://semver.org/) specification.

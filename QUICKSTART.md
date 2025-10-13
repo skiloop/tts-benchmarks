@@ -1,203 +1,211 @@
-# 快速入门指南
+# Quick Start Guide
 
-## 1. 安装依赖
+## 1. Install Dependencies
 
 ```bash
-# 安装Python依赖
+# Install Python dependencies
 pip install -r requirements.txt
 
-# 安装命令行工具
+# Install command line tools
 ./install.sh
 ```
 
-## 2. 基本使用
+## 2. Basic Usage
 
-### 快速测试 ChatTTS
+### Quick Test ChatTTS
 
 ```bash
-# 最简单的使用
-chartts -t "你好，这是一个测试" -o test.wav
+# Simplest usage
+chartts -t "Hello, this is a test" -o test.wav
 
-# 查看生成的文件
+# View generated file
 ls -lh test.wav
 ```
 
-### 指定说话人（音色）
+### Specify Speaker (Voice)
 
 ```bash
-# 使用不同的种子值会产生不同的音色
-chartts -t "测试不同音色" -o voice1.wav --speaker 100
-chartts -t "测试不同音色" -o voice2.wav --speaker 200
-chartts -t "测试不同音色" -o voice3.wav --speaker 300
+# Different seed values will produce different voices
+chartts -t "Test different voices" -o voice1.wav --speaker 100
+chartts -t "Test different voices" -o voice2.wav --speaker 200
+chartts -t "Test different voices" -o voice3.wav --speaker 300
 ```
 
-### 从文件批量生成
+### Batch Generate from Files
 
 ```bash
-# 创建文本文件
-echo "这是第一段要转换的文本。" > input1.txt
-echo "这是第二段要转换的文本。" > input2.txt
+# Create text files
+echo "This is the first text to be converted." > input1.txt
+echo "This is the second text to be converted." > input2.txt
 
-# 批量转换
+# Batch conversion
 for i in input*.txt; do
     output="${i%.txt}.wav"
     chartts -f "$i" -o "$output"
-    echo "生成: $output"
+    echo "Generated: $output"
 done
 ```
 
-## 3. 性能测评
+## 3. Performance Benchmarking
 
-### 运行基准测试
+### Run Benchmark Tests
 
 ```bash
-# 使用示例配置
+# Use example configuration
 perftest -f tts-benchmark-example.json -o benchmark-results.json
 
-# 查看结果
+# View results
 cat benchmark-results.json
 ```
 
-### 自定义测评
+### Custom Benchmarking
 
-创建你自己的配置文件 `my-benchmark.json`:
+Create your own configuration file `my-benchmark.json`:
 
 ```json
 {
-  "description": "我的TTS测评",
+  "description": "My TTS Benchmark",
   "iterations": 5,
   "tests": [
     {
-      "name": "短文本",
-      "command": "chartts -t '你好' -o /tmp/short.wav"
+      "name": "Short Text",
+      "command": "chartts -t 'Hello' -o /tmp/short.wav"
     },
     {
-      "name": "中等文本",
-      "command": "chartts -t '这是一段中等长度的测试文本，用于评估性能。' -o /tmp/medium.wav"
+      "name": "Medium Text",
+      "command": "chartts -t 'This is a medium length test text for evaluating performance.' -o /tmp/medium.wav"
     },
     {
-      "name": "长文本",
+      "name": "Long Text",
       "command": "chartts -f long_text.txt -o /tmp/long.wav"
     }
   ]
 }
 ```
 
-运行测评：
+Run the benchmark:
 
 ```bash
 perftest -f my-benchmark.json -v -o my-results.json
 ```
 
-## 4. 运行测试
+## 4. Run Tests
 
 ```bash
-# 运行完整的测试套件
+# Run complete test suite
 ./test_chartts.sh
 ```
 
-## 5. 高级用法
+## 5. Advanced Usage
 
-### 优化生成质量
+### Optimize Generation Quality
 
 ```bash
-# 使用文本优化
-chartts -t "需要高质量的语音输出" -o high_quality.wav --refine
+# Use text refinement
+chartts -t "Need high quality speech output" -o high_quality.wav --refine
 
-# 调整温度参数（越低越稳定）
-chartts -t "稳定的语音" -o stable.wav --temperature 0.1
+# Adjust temperature parameter (lower is more stable)
+chartts -t "Stable speech" -o stable.wav --temperature 0.1
 
-# 组合使用
-chartts -t "最佳质量" -o best.wav --refine --temperature 0.2 --speaker 42
+# Combined usage
+chartts -t "Best quality" -o best.wav --refine --temperature 0.2 --speaker 42
 ```
 
-### 指定设备
+### Specify Device
 
 ```bash
-# 强制使用CPU
-chartts -t "测试" -o test.wav --device cpu
+# Force CPU usage
+chartts -t "Test" -o test.wav --device cpu
 
-# 使用GPU（如果可用）
-chartts -t "测试" -o test.wav --device cuda
+# Use GPU (if available)
+chartts -t "Test" -o test.wav --device cuda
 
-# 使用Apple Silicon GPU
-chartts -t "测试" -o test.wav --device mps
+# Use Apple Silicon GPU
+chartts -t "Test" -o test.wav --device mps
 
-# 自动选择最佳设备（默认）
-chartts -t "测试" -o test.wav --device auto
+# Auto-select best device (default)
+chartts -t "Test" -o test.wav --device auto
 ```
 
-### 加速生成
+### Accelerate Generation
 
 ```bash
-# 使用torch.compile加速（需要PyTorch 2.0+）
-chartts -t "测试" -o test.wav --compile
+# Use torch.compile for acceleration (requires PyTorch 2.0+)
+chartts -t "Test" -o test.wav --compile
 ```
 
-## 6. 常见问题
+## 6. Common Issues
 
-### 首次运行很慢
+### First Run is Slow
 
-首次运行时，ChatTTS需要下载模型文件（约几百MB），这是正常的。后续运行会快很多。
+On first run, ChatTTS needs to download model files (a few hundred MB), which is normal. Subsequent runs will be much faster.
 
-### 内存不足
+### Device Not Supported
 
-如果遇到内存问题，可以：
-
-1. 使用CPU模式：`--device cpu`
-2. 分段处理长文本
-3. 关闭其他占用内存的程序
-
-### 找不到命令
-
-确保 `~/.local/bin` 在你的 PATH 中：
+If you encounter CUDA or MPS unavailable errors, use `--device cpu` to force CPU mode:
 
 ```bash
-# 添加到 ~/.bashrc 或 ~/.zshrc
+chartts -t "Test" -o test.wav --device cpu
+```
+
+### Out of Memory
+
+If you encounter memory issues:
+
+1. Use CPU mode: `--device cpu`
+2. Process long text in segments
+3. Close other memory-intensive programs
+
+### Command Not Found
+
+Ensure `~/.local/bin` is in your PATH:
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
 export PATH="$HOME/.local/bin:$PATH"
 
-# 重新加载配置
-source ~/.bashrc  # 或 source ~/.zshrc
+# Reload configuration
+source ~/.bashrc  # or source ~/.zshrc
 ```
 
-## 7. 脚本集成
+## 7. Script Integration
 
-在你自己的脚本中使用：
+Use in your own scripts:
 
 ```bash
 #!/bin/bash
 
-# 文本转语音函数
+# Text-to-speech function
 text_to_speech() {
     local text="$1"
     local output="$2"
     
     if chartts -t "$text" -o "$output" 2>/dev/null; then
-        echo "成功: $output"
+        echo "Success: $output"
         return 0
     else
-        echo "失败: $text" >&2
+        echo "Failed: $text" >&2
         return 1
     fi
 }
 
-# 使用示例
-text_to_speech "你好世界" "output.wav"
+# Usage example
+text_to_speech "Hello World" "output.wav"
 ```
 
-## 8. Python集成
+## 8. Python Integration
 
-如果需要在Python中使用：
+If you need to use in Python:
 
 ```python
 import subprocess
 import sys
 
 def generate_speech(text, output_path, **kwargs):
-    """使用chartts生成语音"""
+    """Generate speech using chartts"""
     cmd = ['chartts', '-t', text, '-o', output_path]
     
-    # 添加可选参数
+    # Add optional parameters
     if 'speaker' in kwargs:
         cmd.extend(['--speaker', str(kwargs['speaker'])])
     if 'temperature' in kwargs:
@@ -209,32 +217,40 @@ def generate_speech(text, output_path, **kwargs):
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"错误: {e.stderr}", file=sys.stderr)
+        print(f"Error: {e.stderr}", file=sys.stderr)
         return False
 
-# 使用示例
-if generate_speech("你好世界", "output.wav", speaker=42, temperature=0.3):
-    print("生成成功！")
+# Usage example
+if generate_speech("Hello World", "output.wav", speaker=42, temperature=0.3):
+    print("Generation successful!")
 ```
 
-## 9. 下一步
+## 9. Next Steps
 
-- 查看完整文档：[README.md](README.md)
-- 了解性能测试工具：`perftest --help`
-- 了解ChatTTS客户端：`chartts --help`
-- 探索更多配置选项
-- 比较不同TTS引擎的性能
+### For Beginners
+1. Read [QUICKSTART.md](QUICKSTART.md)
+2. Run `./test_chartts.sh`
+3. Try `./examples/simple_usage.sh`
 
-## 10. 获取帮助
+### For Intermediate Users
+1. Read the complete [README.md](README.md) documentation
+2. Customize `tts-benchmark-example.json`
+3. Write your own batch processing scripts
+
+### For Advanced Users
+1. Study `scripts/chartts` source code
+2. Integrate into your own projects
+3. Contribute new features or examples
+
+## 10. Get Help
 
 ```bash
-# 查看chartts帮助
+# View chartts help
 chartts --help
 
-# 查看perftest帮助
+# View perftest help
 perftest --help
 
-# 详细输出（用于调试）
-chartts -t "测试" -o test.wav -v
+# Verbose output (for debugging)
+chartts -t "Test" -o test.wav -v
 ```
-

@@ -1,252 +1,251 @@
 # TTS Benchmarks
 
-TTS（Text-to-Speech）项目性能测评工具集。
+Text-to-Speech (TTS) project performance benchmarking toolkit.
 
-## ✨ 特性
+## ✨ Features
 
-- 🎯 **chartts**: ChatTTS 命令行客户端 - 简单易用的命令行接口
-- ⚡ **perftest**: 性能测试工具 - 准确比较不同TTS引擎的性能
-- 📊 支持批量处理和自动化测试
-- 🔧 丰富的配置选项和参数调整
-- 📈 详细的性能统计和JSON输出
-- 🚀 支持CPU/GPU/MPS等多种设备
+- 🎯 **chartts**: ChatTTS command line client - Simple and easy-to-use CLI
+- ⚡ **perftest**: Performance testing tool - Accurate comparison of different TTS engines
+- 📊 Support for batch processing and automated testing
+- 🔧 Rich configuration options and parameter tuning
+- 📈 Detailed performance statistics and JSON output
+- 🚀 Support for multiple devices: CPU/GPU/MPS
 
-## 快速开始
+## Quick Start
 
 ```bash
-# 1. 安装依赖
+# 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. 安装命令行工具
+# 2. Install command line tools
 ./install.sh
 
-# 3. 生成第一个语音
-chartts -t "你好世界" -o hello.wav
+# 3. Generate your first speech
+chartts -t "Hello World" -o hello.wav
 
-# 4. 运行测试
+# 4. Run tests
 ./test_chartts.sh
 ```
 
-更多信息请查看：
-- 📖 [安装说明](INSTALL.md) - 详细的安装步骤和故障排除
-- 🚀 [快速入门](QUICKSTART.md) - 5分钟上手指南
-- 📁 [示例脚本](examples/) - 实用示例集合
+For more information:
+- 📖 [Installation Guide](INSTALL.md) - Detailed installation steps and troubleshooting
+- 🚀 [Quick Start Guide](QUICKSTART.md) - Get started in 5 minutes
+- 📁 [Example Scripts](examples/) - Practical examples collection
 
-## 安装
+## Installation
 
-### 1. 克隆仓库
+### 1. Clone Repository
 
 ```bash
 git clone <repository-url>
 cd tts-benchmarks
 ```
 
-### 2. 安装依赖
+### 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. 安装命令行工具
+### 3. Install Command Line Tools
 
 ```bash
 ./install.sh
 ```
 
-这会将所有脚本链接到 `~/.local/bin/` 目录（确保该目录在你的 PATH 中）。
+This will symlink all scripts to `~/.local/bin/` directory (ensure this directory is in your PATH).
 
-你也可以自定义安装路径：
+You can also customize the installation path:
 
 ```bash
 DST_PATH=/usr/local/bin ./install.sh
 ```
 
-## 使用说明
+## Usage Guide
 
-### ChatTTS 命令行客户端
+### ChatTTS Command Line Client
 
-`chartts` 提供了 ChatTTS 的命令行接口，方便测评和批量处理。
+`chartts` provides a command line interface for ChatTTS, making it easy for benchmarking and batch processing.
 
-#### 基本用法
+#### Basic Usage
 
 ```bash
-# 直接输入文本
-chartts -t "你好世界" -o output.wav
+# Direct text input
+chartts -t "Hello World" -o output.wav
 
-# 从文件读取文本
+# Read text from file
 chartts -f input.txt -o output.wav
 
-# 指定说话人（控制音色）
-chartts -t "测试语音" -o test.wav --speaker 123
+# Specify speaker (voice control)
+chartts -t "Test speech" -o test.wav --speaker 123
 
-# 调整生成参数
-chartts -t "测试语音" -o test.wav --temperature 0.3 --top-p 0.7
+# Adjust generation parameters
+chartts -t "Test speech" -o test.wav --temperature 0.3 --top-p 0.7
 
-# 使用文本优化提高质量
-chartts -t "高质量语音" -o high_quality.wav --refine
+# Use text refinement for better quality
+chartts -t "High quality speech" -o high_quality.wav --refine
 
-# 详细输出
-chartts -t "测试" -o test.wav -v
+# Verbose output
+chartts -t "Test" -o test.wav -v
 ```
 
-#### 参数说明
+#### Parameter Reference
 
-**输入参数：**
-- `-t, --text TEXT`: 要转换的文本
-- `-f, --file FILE`: 包含文本的输入文件
+**Input Arguments:**
+- `-t, --text TEXT`: Text to convert
+- `-f, --file FILE`: Input file containing text
 
-**输出参数：**
-- `-o, --output FILE`: 输出音频文件路径（WAV格式）
+**Output Arguments:**
+- `-o, --output FILE`: Output audio file path (WAV format)
 
-**ChatTTS 参数：**
-- `--speaker SEED`: 说话人种子，用于控制音色（整数）
-- `--temperature FLOAT`: 温度参数，控制生成的随机性（默认: 0.3）
-- `--top-p FLOAT`: Top-P采样参数（默认: 0.7）
-- `--top-k INT`: Top-K采样参数（默认: 20）
-- `--refine`: 使用refine文本以提高质量
-- `--sample-rate INT`: 采样率（默认: 24000）
+**ChatTTS Parameters:**
+- `--speaker SEED`: Speaker seed for voice control (integer)
+- `--temperature FLOAT`: Temperature parameter, controls randomness (default: 0.3)
+- `--top-p FLOAT`: Top-P sampling parameter (default: 0.7)
+- `--top-k INT`: Top-K sampling parameter (default: 20)
+- `--refine`: Use text refinement to improve quality
+- `--sample-rate INT`: Sample rate (default: 24000)
 
-**设备参数：**
-- `--device {auto,cpu,cuda,mps}`: 使用的设备（默认: auto）
-- `--compile`: 使用torch.compile加速（需要PyTorch 2.0+）
+**Device Parameters:**
+- `--device {auto,cpu,cuda,mps}`: Device to use (default: auto)
+- `--compile`: Use torch.compile for acceleration (requires PyTorch 2.0+)
 
-**其他参数：**
-- `-v, --verbose`: 显示详细信息
+**Other Parameters:**
+- `-v, --verbose`: Show verbose information
 
-### 性能测试工具
+### Performance Testing Tool
 
-`perftest` 用于测试和比较多个命令的性能。
+`perftest` is used to test and compare the performance of multiple commands.
 
-#### 基本用法
+#### Basic Usage
 
 ```bash
-# 测试两个命令
+# Test two commands
 perftest -c "sleep 1" -c "sleep 0.5" -n 3
 
-# 使用配置文件
+# Use configuration file
 perftest -f config.json
 
-# 创建示例配置文件
+# Create sample configuration file
 perftest --sample-config perftest.json
 
-# 指定命令名称
+# Specify command names
 perftest -t "slow,sleep 1" -t "fast,sleep 0.5" -n 5 -v
 
-# 保存结果
+# Save results
 perftest -f config.json -o results.json
 ```
 
-#### TTS 性能测评示例
+#### TTS Performance Benchmarking Example
 
-创建一个配置文件 `tts-benchmark.json`:
+Create a configuration file `tts-benchmark.json`:
 
 ```json
 {
-  "description": "TTS引擎性能测评",
+  "description": "TTS Engine Performance Benchmark",
   "iterations": 5,
   "tests": [
     {
       "name": "ChatTTS",
-      "command": "chartts -t '这是一个测试文本' -o /tmp/chattts_test.wav"
+      "command": "chartts -t 'This is a test text' -o /tmp/chattts_test.wav"
     },
     {
-      "name": "其他TTS工具",
-      "command": "other-tts -t '这是一个测试文本' -o /tmp/other_test.wav"
+      "name": "Other TTS Tool",
+      "command": "other-tts -t 'This is a test text' -o /tmp/other_test.wav"
     }
   ]
 }
 ```
 
-运行测评：
+Run the benchmark:
 
 ```bash
 perftest -f tts-benchmark.json -o results.json
 ```
 
-#### 参数说明
+#### Parameter Reference
 
-**输入参数：**
-- `-c, --command CMD`: 要测试的命令（可多次指定）
-- `-t, --test "NAME,CMD"`: 命名测试，格式: "名称,命令"（可多次指定）
-- `-f, --config FILE`: 从 JSON 配置文件加载测试
+**Input Arguments:**
+- `-c, --command CMD`: Command to test (can be specified multiple times)
+- `-t, --test "NAME,CMD"`: Named test, format: "name,command" (can be specified multiple times)
+- `-f, --config FILE`: Load tests from JSON configuration file
 
-**运行参数：**
-- `-n, --iterations N`: 每个命令运行的次数（默认: 3）
-- `-v, --verbose`: 详细输出每次运行的结果
-- `--debug`: 调试模式，显示 time 命令的原始输出
+**Execution Parameters:**
+- `-n, --iterations N`: Number of times to run each command (default: 3)
+- `-v, --verbose`: Verbose output for each run
+- `--debug`: Debug mode, show raw time command output
 
-**输出参数：**
-- `-o, --output FILE`: 保存结果到 JSON 文件
-- `--no-color`: 禁用彩色输出
+**Output Parameters:**
+- `-o, --output FILE`: Save results to JSON file
+- `--no-color`: Disable colored output
 
-**其他参数：**
-- `--sample-config FILE`: 创建示例配置文件
+**Other Parameters:**
+- `--sample-config FILE`: Create sample configuration file
 
-## 开发
+## Development
 
-### 添加新的TTS客户端
+### Adding New TTS Clients
 
-1. 在 `scripts/` 目录创建新的可执行脚本
-2. 遵循类似 `chartts` 的接口设计
-3. 运行 `./install.sh` 安装
+1. Create a new executable script in the `scripts/` directory
+2. Follow the interface design similar to `chartts`
+3. Run `./install.sh` to install
 
-### 项目结构
+### Project Structure
 
 ```
 tts-benchmarks/
-├── install.sh          # 安装脚本
-├── requirements.txt    # Python依赖
-├── README.md          # 本文档
+├── install.sh          # Installation script
+├── requirements.txt    # Python dependencies
+├── README.md          # This document
 └── scripts/
-    ├── chartts        # ChatTTS命令行客户端
-    └── perftest       # 性能测试工具
+    ├── chartts        # ChatTTS command line client
+    └── perftest       # Performance testing tool
 ```
 
-## 依赖
+## Dependencies
 
 - Python 3.8+
 - PyTorch 2.0+
 - ChatTTS
 - torchaudio
 
-详见 `requirements.txt`
+See `requirements.txt` for details.
 
-## 许可证
+## License
 
-[添加许可证信息]
+[Add license information]
 
-## 贡献
+## Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Issues and Pull Requests are welcome!
 
-## 故障排除
+## Troubleshooting
 
-### ChatTTS 模型下载问题
+### ChatTTS Model Download Issues
 
-首次使用时，ChatTTS 会自动下载模型。如果网络不佳，可以：
+On first run, ChatTTS will automatically download model files (a few hundred MB). If network is poor:
 
-1. 使用代理
-2. 手动下载模型到指定目录
-3. 使用国内镜像源
+1. Use a proxy
+2. Manually download models to specified directory
+3. Use domestic mirror sources
 
-### 设备不支持问题
+### Device Not Supported
 
-如果遇到CUDA或MPS不可用的错误，使用 `--device cpu` 强制使用CPU：
+If you encounter CUDA or MPS unavailable errors, force CPU mode with `--device cpu`:
 
 ```bash
-chartts -t "测试" -o test.wav --device cpu
+chartts -t "Test" -o test.wav --device cpu
 ```
 
-### 内存不足
+### Out of Memory
 
-对于大段文本，可以：
+For large text segments:
 
-1. 分段处理
-2. 使用更小的batch size
-3. 使用CPU而非GPU
+1. Process in chunks
+2. Use smaller batch sizes
+3. Use CPU instead of GPU
 
-## 相关链接
+## Related Links
 
 - [ChatTTS GitHub](https://github.com/2noise/ChatTTS)
 - [PyTorch](https://pytorch.org/)
-
