@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+"""
+ChatTTS 命令行客户端
+用于TTS项目测评
+"""
+
+import sys
+import argparse
+import os
+from pathlib import Path
+import warnings
+
+# 抑制警告
+warnings.filterwarnings('ignore')
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="ChatTTS 命令行客户端 - 将文本转换为语音",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  # 基本使用
+  %(prog)s -t "你好世界" -o output.wav
+  
+  # 从文件读取文本
+  %(prog)s -f input.txt -o output.wav
+  
+  # 指定说话人和参数
+  %(prog)s -t "测试语音" -o test.wav --speaker 123 --temperature 0.3
+  
+  # 使用refine参数提高质量
+  %(prog)s -t "高质量语音" -o high_quality.wav --refine
+        """
+    )
+    
+    # 输入参数
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument('-t', '--text', 
+                           help='要转换的文本')
+    input_group.add_argument('-f', '--file', 
+                           help='包含文本的输入文件')
+    
+    # 输出参数
+    parser.add_argument('-o', '--output', required=True,
+                       help='输出音频文件路径（WAV格式）')
+    
+    # ChatTTS 参数
+    parser.add_argument('--speaker', type=int, default=None,
+                       help='说话人种子（用于控制音色）')
+    parser.add_argument('--temperature', type=float, default=0.3,
+                       help='温度参数，控制生成的随机性 (默认: 0.3)')
+    parser.add_argument('--top-p', type=float, default=0.7,
+                       help='Top-P采样参数 (默认: 0.7)')
+    parser.add_argument('--top-k', type=int, default=20,
+                       help='Top-K采样参数 (默认: 20)')
+    parser.add_argument('--refine', action='store_true',
+                       help='使用refine文本以提高质量')
+    
+    # 设备参数
+    parser.add_argument('--device', default='auto',
+                       choices=['auto', 'cpu', 'cuda', 'mps'],
+                       help='使用的设备 (默认: auto)')
+    parser.add_argument('--compile', action='store_true',
+                       help='使用torch.compile加速（需要PyTorch 2.0+）')
+    
+    # 其他参数
+    parser.add_argument('-v', '--verbose', action='store_true',
+                       help='显示详细信息')
+    parser.add_argument('--sample-rate', type=int, default=24000,
+                       help='采样率 (默认: 24000)')
+    
+    args = parser.parse_args()
+    
+    # 获取输入文本
+    if args.text:
+        text = args.text
+    else:
+        input_path = Path(args.file)
+        if not input_path.exists():
+            print(f"错误: 输入文件不存在: {args.file}", file=sys.stderr)
+            sys.exit(1)
+        try:
+            with open(input_path, 'r', encoding='utf-8') as f:
+                text = f.read().strip()
+        except Exception as e:
+            print(f"错误: 无法读取输入文件: {e}", file=sys.stderr)
+            sys.exit(1)
+    
+    if not text:
+        print("错误: 输入文本为空", file=sys.stderr)
+        sys.exit(1)
+    
+    if args.verbose:
+        print(f"输入文本: {text}")
+        print(f"输出文件: {args.output}")
+    
+    # 导入ChatTTS
+    try:
+        import ChatTTS
+        import torch
+        import torchaudio
+    except ImportError as e:
+        print(f"错误: 缺少必要的库: {e}", file=sys.stderr)
+        print("\n请安装ChatTTS及其依赖:", file=sys.stderr)
+        print("  pip install ChatTTS torch torchaudio", file=sys.stderr)
+        sys.exit(1)
+    
+    # 确定设备
+    if args.device == 'auto':
+        if torch.cuda.is_available():
+            device = 'cuda'
+        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            device = 'mps'
+        else:
+            device = 'cpu'
+    else:
+        device = args.device
+    
+    if args.verbose:
+        print(f"使用设备: {device}")
+    
+    # 初始化ChatTTS
+    try:
+        if args.verbose:
+            print("正在初始化ChatTTS...")
+        
+        chat = ChatTTS.Chat()
+        
+        # 加载模型
+        load_success = chat.load(
+            compile=args.compile,
+            device=device
+        )
+        
+        if not load_success:
+            print("错误: ChatTTS模型加载失败", file=sys.stderr)
+            sys.exit(1)
+        
+        if args.verbose:
+            print("模型加载成功")
+        
+        # 准备参数
+        params_infer_code = ChatTTS.Chat.InferCodeParams(
+            temperature=args.temperature,
+            top_P=args.top_p,
+            top_K=args.top_k,
+        )
+        
+        params_refine_text = ChatTTS.Chat.RefineTextParams()
+        
+        # 设置说话人
+        if args.speaker is not None:
+            torch.manual_seed(args.speaker)
+            if args.verbose:
+                print(f"使用说话人种子: {args.speaker}")
+        
+        # 生成语音
+        if args.verbose:
+            print("正在生成语音...")
+        
+        # 处理文本
+        texts = [text]
+        
+        # 是否使用refine
+        if args.refine:
+            if args.verbose:
+                print("使用文本优化...")
+            texts = chat.infer(
+                texts,
+                skip_refine_text=False,
+                refine_text_only=True,
+                params_refine_text=params_refine_text
+            )
+            if args.verbose:
+                print(f"优化后文本: {texts[0]}")
+        
+        # 生成音频
+        wavs = chat.infer(
+            texts,
+            skip_refine_text=True,
+            params_infer_code=params_infer_code
+        )
+        
+        if not wavs or len(wavs) == 0:
+            print("错误: 音频生成失败", file=sys.stderr)
+            sys.exit(1)
+        
+        # 保存音频
+        if args.verbose:
+            print(f"正在保存音频到: {args.output}")
+        
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # 将numpy数组转换为torch tensor并保存
+        audio_data = torch.from_numpy(wavs[0]).unsqueeze(0)
+        torchaudio.save(
+            str(output_path),
+            audio_data,
+            args.sample_rate,
+            encoding='PCM_S',
+            bits_per_sample=16
+        )
+        
+        if args.verbose:
+            print("✓ 完成")
+        else:
+            # 非verbose模式下，只输出文件路径，方便脚本处理
+            print(args.output)
+    
+    except KeyboardInterrupt:
+        print("\n操作被中断", file=sys.stderr)
+        sys.exit(130)
+    except Exception as e:
+        print(f"错误: {e}", file=sys.stderr)
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
+

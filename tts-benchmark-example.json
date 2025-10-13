@@ -1,0 +1,23 @@
+{
+  "description": "TTS引擎性能测评示例配置",
+  "iterations": 3,
+  "tests": [
+    {
+      "name": "ChatTTS-默认参数",
+      "command": "chartts -t '这是一个测试文本，用于评估语音合成的速度和质量。' -o /tmp/chattts_default.wav"
+    },
+    {
+      "name": "ChatTTS-低温度",
+      "command": "chartts -t '这是一个测试文本，用于评估语音合成的速度和质量。' -o /tmp/chattts_low_temp.wav --temperature 0.1"
+    },
+    {
+      "name": "ChatTTS-高质量",
+      "command": "chartts -t '这是一个测试文本，用于评估语音合成的速度和质量。' -o /tmp/chattts_refine.wav --refine"
+    },
+    {
+      "name": "ChatTTS-指定说话人",
+      "command": "chartts -t '这是一个测试文本，用于评估语音合成的速度和质量。' -o /tmp/chattts_speaker.wav --speaker 42"
+    }
+  ]
+}
+

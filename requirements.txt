@@ -1,0 +1,11 @@
+# TTS Benchmarks 依赖
+
+# ChatTTS 及其依赖
+ChatTTS>=0.1.0
+torch>=2.0.0
+torchaudio>=2.0.0
+numpy>=1.24.0
+
+# 可选：加速和优化
+# transformers>=4.30.0
+# accelerate>=0.20.0
