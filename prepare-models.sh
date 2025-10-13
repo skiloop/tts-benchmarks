@@ -23,7 +23,7 @@ $envs_path/neutts-air/bin/python -m examples.basic_example \
   --input_text "$TEST_TEXT" \
   --ref_audio $REF_AUDIO \
   --ref_text $REF_TEXT
-$envs_path/neutts-air/bin/python -m examples.onnx_example --input_text "$TEST_TEXT" --ref_audio $REF_AUDIO --ref_text $REF_TEXT --ref_codes $REF_CODES
+$envs_path/neutts-air/bin/python -m examples.onnx_example --input_text "$TEST_TEXT" --ref_text $REF_TEXT --ref_codes $REF_CODES
 chartts -t "$TEST_TEXT" -o output.wav
 # coqui tts
 $envs_path/coqui-tts/bin/tts --text "$TEST_TEXT" --out_path output.wav
