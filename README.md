@@ -2,10 +2,35 @@
 
 TTS（Text-to-Speech）项目性能测评工具集。
 
-## 功能
+## ✨ 特性
 
-- **chartts**: ChatTTS 命令行客户端
-- **perftest**: 性能测试工具，用于比较不同TTS引擎的性能
+- 🎯 **chartts**: ChatTTS 命令行客户端 - 简单易用的命令行接口
+- ⚡ **perftest**: 性能测试工具 - 准确比较不同TTS引擎的性能
+- 📊 支持批量处理和自动化测试
+- 🔧 丰富的配置选项和参数调整
+- 📈 详细的性能统计和JSON输出
+- 🚀 支持CPU/GPU/MPS等多种设备
+
+## 快速开始
+
+```bash
+# 1. 安装依赖
+pip install -r requirements.txt
+
+# 2. 安装命令行工具
+./install.sh
+
+# 3. 生成第一个语音
+chartts -t "你好世界" -o hello.wav
+
+# 4. 运行测试
+./test_chartts.sh
+```
+
+更多信息请查看：
+- 📖 [安装说明](INSTALL.md) - 详细的安装步骤和故障排除
+- 🚀 [快速入门](QUICKSTART.md) - 5分钟上手指南
+- 📁 [示例脚本](examples/) - 实用示例集合
 
 ## 安装
 
