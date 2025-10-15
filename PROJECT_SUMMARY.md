@@ -4,7 +4,7 @@
 
 ### ✅ Core Features
 
-1. **chartts Command Line Client** (`scripts/chartts`)
+1. **chattts Command Line Client** (`scripts/chattts`)
    - Complete ChatTTS command line interface
    - Support for text input and file input
    - Support for voice, parameters, device configuration
@@ -66,7 +66,7 @@
 
 ### 🧪 Tests and Configuration
 
-1. **test_chartts.sh** - Functional test script
+1. **test_chattts.sh** - Functional test script
    - 4 test cases
    - Automatic validation
    - Cleanup functionality
@@ -92,7 +92,7 @@
 
 ## 📊 Project Statistics
 
-- **Lines of Code**: 660+ lines (chartts + perftest)
+- **Lines of Code**: 660+ lines (chattts + perftest)
 - **Documentation Pages**: 5 main documents
 - **Example Scripts**: 3 complete examples
 - **Test Cases**: 4 functional tests
@@ -110,14 +110,14 @@ pip install -r requirements.txt
 ./install.sh
 
 # Step 3: Test
-chartts -t "Hello World" -o hello.wav
+chattts -t "Hello World" -o hello.wav
 ```
 
 ### 2. Daily Usage
 
 ```bash
 # Simple conversion
-chartts -t "Text to speak" -o output.wav
+chattts -t "Text to speak" -o output.wav
 
 # Batch processing
 ./examples/batch_process.sh
@@ -130,10 +130,10 @@ perftest -f tts-benchmark-example.json
 
 ```bash
 # Specify voice and parameters
-chartts -t "Test" -o test.wav --speaker 42 --temperature 0.3
+chattts -t "Test" -o test.wav --speaker 42 --temperature 0.3
 
 # High-quality generation
-chartts -t "Test" -o test.wav --refine
+chattts -t "Test" -o test.wav --refine
 
 # Performance comparison
 ./examples/benchmark_comparison.sh
@@ -141,7 +141,7 @@ chartts -t "Test" -o test.wav --refine
 
 ## ✨ Key Features
 
-### chartts Command Line Client
+### chattts Command Line Client
 
 ✅ **Flexible Input**
 - Command line argument input (`-t`)
@@ -199,12 +199,12 @@ tts-benchmarks/
 ├── CHANGELOG.md                    # Changelog ⭐
 ├── PROJECT_SUMMARY.md              # This file ⭐
 ├── install.sh                      # Installation script 🔧
-├── test_chartts.sh                 # Test script 🧪
+├── test_chattts.sh                 # Test script 🧪
 ├── requirements.txt                # Python dependencies 📦
 ├── tts-benchmark-example.json      # Benchmark config ⚙️
 ├── .gitignore                      # Git config 🚫
 ├── scripts/
-│   ├── chartts                     # ChatTTS client ⭐⭐⭐
+│   ├── chattts                     # ChatTTS client ⭐⭐⭐
 │   └── perftest                    # Performance tool ⭐⭐
 └── examples/
     ├── README.md                   # Examples guide 📖
@@ -217,7 +217,7 @@ tts-benchmarks/
 
 ### For Beginners
 1. Read [QUICKSTART.md](QUICKSTART.md)
-2. Run `./test_chartts.sh`
+2. Run `./test_chattts.sh`
 3. Try `./examples/simple_usage.sh`
 
 ### For Intermediate Users
@@ -226,13 +226,13 @@ tts-benchmarks/
 3. Write your own batch processing scripts
 
 ### For Advanced Users
-1. Study `scripts/chartts` source code
+1. Study `scripts/chattts` source code
 2. Integrate into your own projects
 3. Contribute new features or examples
 
 ## 🔍 Key Implementation Details
 
-### chartts Core Features
+### chattts Core Features
 
 1. **Argument Parsing** (argparse)
    - Mutually exclusive input options
@@ -304,12 +304,12 @@ tts-benchmarks/
    ```bash
    pip install -r requirements.txt
    ./install.sh
-   ./test_chartts.sh
+   ./test_chattts.sh
    ```
 
 2. **Generate First Speech**
    ```bash
-   chartts -t "This is my first speech" -o first.wav
+   chattts -t "This is my first speech" -o first.wav
    ```
 
 3. **Run Performance Test**
@@ -322,7 +322,7 @@ tts-benchmarks/
 1. **Try Different Speakers**
    ```bash
    for i in {1..5}; do
-       chartts -t "Test voice $i" -o "voice_$i.wav" --speaker $((i*100))
+       chattts -t "Test voice $i" -o "voice_$i.wav" --speaker $((i*100))
    done
    ```
 
@@ -357,13 +357,13 @@ tts-benchmarks/
 - 📖 View documentation: All `.md` files
 - 💬 Submit Issue: Report problems or suggestions
 - 🤝 Contribute code: Fork + Pull Request
-- ❓ Command help: `chartts --help` or `perftest --help`
+- ❓ Command help: `chattts --help` or `perftest --help`
 
 ## 🎉 Summary
 
 You now have a fully-featured TTS benchmarking toolkit!
 
-- ✅ **chartts**: Feature-rich ChatTTS command line client
+- ✅ **chattts**: Feature-rich ChatTTS command line client
 - ✅ **perftest**: Professional performance testing tool
 - ✅ **Complete Documentation**: From installation to advanced usage
 - ✅ **Practical Examples**: Ready-to-use scripts

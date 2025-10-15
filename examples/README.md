@@ -1,13 +1,13 @@
 # Example Scripts
 
-This directory contains various example scripts demonstrating the usage of `chartts` and `perftest`.
+This directory contains various example scripts demonstrating the usage of `chattts` and `perftest`.
 
 ## 📁 File List
 
 ### 1. simple_usage.sh
 **Simple Usage Examples**
 
-Demonstrates basic features of chartts:
+Demonstrates basic features of chattts:
 - Basic text-to-speech
 - Different speakers (voices)
 - Parameter adjustment
@@ -56,7 +56,7 @@ Different speaker seeds produce different voices. You can test multiple:
 ```bash
 for i in {1..10}; do
     speaker=$((RANDOM % 1000))
-    chartts -t "Test voice" -o "voice_${speaker}.wav" --speaker $speaker
+    chattts -t "Test voice" -o "voice_${speaker}.wav" --speaker $speaker
     echo "Generated speaker $speaker"
 done
 ```
@@ -66,7 +66,7 @@ done
 ```bash
 find /path/to/texts -name "*.txt" | while read file; do
     output="${file%.txt}.wav"
-    chartts -f "$file" -o "$output"
+    chattts -f "$file" -o "$output"
 done
 ```
 
@@ -74,7 +74,7 @@ done
 
 ```bash
 echo "This is a text" | while read line; do
-    chartts -t "$line" -o "output.wav"
+    chattts -t "$line" -o "output.wav"
 done
 ```
 
@@ -82,10 +82,10 @@ done
 
 ```bash
 # Using GNU parallel (if installed)
-parallel -j 4 'chartts -f {} -o {.}.wav' ::: *.txt
+parallel -j 4 'chattts -f {} -o {.}.wav' ::: *.txt
 
 # Or using xargs
-ls *.txt | xargs -P 4 -I {} bash -c 'chartts -f "$1" -o "${1%.txt}.wav"' _ {}
+ls *.txt | xargs -P 4 -I {} bash -c 'chattts -f "$1" -o "${1%.txt}.wav"' _ {}
 ```
 
 ### 5. Monitor Progress
@@ -97,7 +97,7 @@ current=0
 for file in *.txt; do
     ((current++))
     echo "[$current/$total] Processing: $file"
-    chartts -f "$file" -o "${file%.txt}.wav"
+    chattts -f "$file" -o "${file%.txt}.wav"
 done
 ```
 
@@ -106,7 +106,7 @@ done
 ```bash
 for file in *.txt; do
     output="${file%.txt}.wav"
-    if chartts -f "$file" -o "$output" 2>/dev/null; then
+    if chattts -f "$file" -o "$output" 2>/dev/null; then
         echo "✓ $file"
     else
         echo "✗ $file failed" >&2
@@ -133,7 +133,7 @@ texts=(
 for temp in 0.1 0.3 0.5; do
     for i in "${!texts[@]}"; do
         echo "Testing: temp=$temp, text_length=${#texts[$i]}"
-        chartts -t "${texts[$i]}" \
+        chattts -t "${texts[$i]}" \
                 -o "output_${temp}_${i}.wav" \
                 --temperature $temp \
                 -v

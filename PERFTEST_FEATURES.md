@@ -61,11 +61,11 @@ cat > tts-bench.json << EOF
   "tests": [
     {
       "name": "ChatTTS-Short",
-      "command": "chartts -t 'Hello world' -o /tmp/short.wav"
+      "command": "chattts -t 'Hello world' -o /tmp/short.wav"
     },
     {
       "name": "ChatTTS-Long",
-      "command": "chartts -f long_text.txt -o /tmp/long.wav"
+      "command": "chattts -f long_text.txt -o /tmp/long.wav"
     }
   ]
 }
@@ -83,7 +83,7 @@ Performance Testing Tool
 Total 2 tests, each running 3 times
 
 [1/2]
-Test [ChatTTS-Short]: chartts -t 'Hello world' -o /tmp/short.wav
+Test [ChatTTS-Short]: chattts -t 'Hello world' -o /tmp/short.wav
   Run 1/3... ✓ (2.345s, mem=450.2MB, cpu=95.3%)
   Run 2/3... ✓ (2.301s, mem=448.1MB, cpu=96.1%)
   Run 3/3... ✓ (2.389s, mem=451.3MB, cpu=94.8%)
@@ -100,7 +100,7 @@ ChatTTS-Long       5.12s ±0.09    523.4MB      93.2%      2.18x
 Detailed Statistics:
 
 [ChatTTS-Short]
-  Command: chartts -t 'Hello world' -o /tmp/short.wav
+  Command: chattts -t 'Hello world' -o /tmp/short.wav
   Avg Real Time: 2.345s (min: 2.301s, max: 2.389s)
   Avg User Time: 2.234s
   Avg Sys Time:  0.089s
@@ -122,7 +122,7 @@ The JSON output now includes resource metrics:
   "results": [
     {
       "name": "ChatTTS-Test",
-      "command": "chartts -t 'test' -o test.wav",
+      "command": "chattts -t 'test' -o test.wav",
       "success": true,
       "avg_real": 2.345,
       "avg_user": 2.234,

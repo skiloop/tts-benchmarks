@@ -24,7 +24,7 @@ $envs_path/neutts-air/bin/python -m examples.basic_example \
   --ref_audio $REF_AUDIO \
   --ref_text $REF_TEXT
 $envs_path/neutts-air/bin/python -m examples.onnx_example --input_text "$TEST_TEXT" --ref_text $REF_TEXT --ref_codes $REF_CODES
-$envs_path/chartts/bin/python ~/.local/bin/chartts -t "$TEST_TEXT" -o output.wav
+$envs_path/chattts/bin/python ~/.local/bin/chattts -t "$TEST_TEXT" -o output.wav
 # coqui tts
 $envs_path/coqui-tts/bin/tts --text "$TEST_TEXT" --out_path output.wav
 $envs_path/coqui-tts/bin/tts --text "$TEST_TEXT" --out_path output.wav --speaker_wav $REF_AUDIO --model_name tts_models/multilingual/multi-dataset/xtts_v2

@@ -99,11 +99,11 @@ source ~/.zshrc
 
 ```bash
 # Check if commands are available
-which chartts
+which chattts
 which perftest
 
 # View version and help
-chartts --help
+chattts --help
 perftest --help
 ```
 
@@ -113,7 +113,7 @@ On first use, ChatTTS will automatically download model files (a few hundred MB)
 
 ```bash
 # Perform a simple test
-chartts -t "Test installation" -o test.wav -v
+chattts -t "Test installation" -o test.wav -v
 ```
 
 Models will be downloaded to one of the following locations:
@@ -150,13 +150,13 @@ pip install accelerate>=0.20.0
 
 ### Issue 1: Command Not Found
 
-**Symptom**: `chartts: command not found`
+**Symptom**: `chattts: command not found`
 
 **Solutions**:
-1. Confirm successful installation: `ls -la ~/.local/bin/chartts`
+1. Confirm successful installation: `ls -la ~/.local/bin/chattts`
 2. Check PATH: `echo $PATH`
 3. Reload configuration: `source ~/.bashrc` or `source ~/.zshrc`
-4. Or use full path: `~/.local/bin/chartts -t "test" -o test.wav`
+4. Or use full path: `~/.local/bin/chattts -t "test" -o test.wav`
 
 ### Issue 2: Import Error
 
@@ -184,7 +184,7 @@ pip install git+https://github.com/2noise/ChatTTS.git
 export HF_ENDPOINT=https://hf-mirror.com
 
 # Then retry
-chartts -t "Test" -o test.wav
+chattts -t "Test" -o test.wav
 ```
 
 Or manually download models:
@@ -200,7 +200,7 @@ Or manually download models:
 **Solutions**:
 ```bash
 # Use CPU mode
-chartts -t "Test" -o test.wav --device cpu
+chattts -t "Test" -o test.wav --device cpu
 
 # Or check CUDA installation
 python3 -c "import torch; print(torch.cuda.is_available())"
@@ -213,7 +213,7 @@ python3 -c "import torch; print(torch.cuda.is_available())"
 **Solutions**:
 ```bash
 # Add execute permission to scripts
-chmod +x ~/.local/bin/chartts
+chmod +x ~/.local/bin/chattts
 chmod +x ~/.local/bin/perftest
 
 # Or rerun installation
@@ -233,14 +233,14 @@ which python3
 source venv/bin/activate  # or your virtual environment path
 
 # Then use commands
-chartts -t "Test" -o test.wav
+chattts -t "Test" -o test.wav
 ```
 
 ## Uninstallation
 
 ```bash
 # Remove command line tools
-rm ~/.local/bin/chartts
+rm ~/.local/bin/chattts
 rm ~/.local/bin/perftest
 
 # Uninstall Python dependencies (optional)
@@ -275,14 +275,14 @@ pip install -r requirements.txt --upgrade
 
 - Read [Quick Start Guide](QUICKSTART.md)
 - View [Complete Documentation](README.md)
-- Run tests: `./test_chartts.sh`
+- Run tests: `./test_chattts.sh`
 - View examples: `ls examples/`
 
 ## Get Help
 
 If you encounter other issues:
 
-1. View detailed logs: `chartts -t "test" -o test.wav -v`
+1. View detailed logs: `chattts -t "test" -o test.wav -v`
 2. Check dependency versions: `pip list`
 3. View system information: `python3 --version && uname -a`
 4. Submit an Issue (include the above information)

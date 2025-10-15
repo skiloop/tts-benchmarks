@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 ```bash
 # Simplest usage
-chartts -t "Hello, this is a test" -o test.wav
+chattts -t "Hello, this is a test" -o test.wav
 
 # View generated file
 ls -lh test.wav
@@ -26,9 +26,9 @@ ls -lh test.wav
 
 ```bash
 # Different seed values will produce different voices
-chartts -t "Test different voices" -o voice1.wav --speaker 100
-chartts -t "Test different voices" -o voice2.wav --speaker 200
-chartts -t "Test different voices" -o voice3.wav --speaker 300
+chattts -t "Test different voices" -o voice1.wav --speaker 100
+chattts -t "Test different voices" -o voice2.wav --speaker 200
+chattts -t "Test different voices" -o voice3.wav --speaker 300
 ```
 
 ### Batch Generate from Files
@@ -41,7 +41,7 @@ echo "This is the second text to be converted." > input2.txt
 # Batch conversion
 for i in input*.txt; do
     output="${i%.txt}.wav"
-    chartts -f "$i" -o "$output"
+    chattts -f "$i" -o "$output"
     echo "Generated: $output"
 done
 ```
@@ -69,15 +69,15 @@ Create your own configuration file `my-benchmark.json`:
   "tests": [
     {
       "name": "Short Text",
-      "command": "chartts -t 'Hello' -o /tmp/short.wav"
+      "command": "chattts -t 'Hello' -o /tmp/short.wav"
     },
     {
       "name": "Medium Text",
-      "command": "chartts -t 'This is a medium length test text for evaluating performance.' -o /tmp/medium.wav"
+      "command": "chattts -t 'This is a medium length test text for evaluating performance.' -o /tmp/medium.wav"
     },
     {
       "name": "Long Text",
-      "command": "chartts -f long_text.txt -o /tmp/long.wav"
+      "command": "chattts -f long_text.txt -o /tmp/long.wav"
     }
   ]
 }
@@ -93,7 +93,7 @@ perftest -f my-benchmark.json -v -o my-results.json
 
 ```bash
 # Run complete test suite
-./test_chartts.sh
+./test_chattts.sh
 ```
 
 ## 5. Advanced Usage
@@ -102,36 +102,36 @@ perftest -f my-benchmark.json -v -o my-results.json
 
 ```bash
 # Use text refinement
-chartts -t "Need high quality speech output" -o high_quality.wav --refine
+chattts -t "Need high quality speech output" -o high_quality.wav --refine
 
 # Adjust temperature parameter (lower is more stable)
-chartts -t "Stable speech" -o stable.wav --temperature 0.1
+chattts -t "Stable speech" -o stable.wav --temperature 0.1
 
 # Combined usage
-chartts -t "Best quality" -o best.wav --refine --temperature 0.2 --speaker 42
+chattts -t "Best quality" -o best.wav --refine --temperature 0.2 --speaker 42
 ```
 
 ### Specify Device
 
 ```bash
 # Force CPU usage
-chartts -t "Test" -o test.wav --device cpu
+chattts -t "Test" -o test.wav --device cpu
 
 # Use GPU (if available)
-chartts -t "Test" -o test.wav --device cuda
+chattts -t "Test" -o test.wav --device cuda
 
 # Use Apple Silicon GPU
-chartts -t "Test" -o test.wav --device mps
+chattts -t "Test" -o test.wav --device mps
 
 # Auto-select best device (default)
-chartts -t "Test" -o test.wav --device auto
+chattts -t "Test" -o test.wav --device auto
 ```
 
 ### Accelerate Generation
 
 ```bash
 # Use torch.compile for acceleration (requires PyTorch 2.0+)
-chartts -t "Test" -o test.wav --compile
+chattts -t "Test" -o test.wav --compile
 ```
 
 ## 6. Common Issues
@@ -145,7 +145,7 @@ On first run, ChatTTS needs to download model files (a few hundred MB), which is
 If you encounter CUDA or MPS unavailable errors, use `--device cpu` to force CPU mode:
 
 ```bash
-chartts -t "Test" -o test.wav --device cpu
+chattts -t "Test" -o test.wav --device cpu
 ```
 
 ### Out of Memory
@@ -180,7 +180,7 @@ text_to_speech() {
     local text="$1"
     local output="$2"
     
-    if chartts -t "$text" -o "$output" 2>/dev/null; then
+    if chattts -t "$text" -o "$output" 2>/dev/null; then
         echo "Success: $output"
         return 0
     else
@@ -202,8 +202,8 @@ import subprocess
 import sys
 
 def generate_speech(text, output_path, **kwargs):
-    """Generate speech using chartts"""
-    cmd = ['chartts', '-t', text, '-o', output_path]
+    """Generate speech using chattts"""
+    cmd = ['chattts', '-t', text, '-o', output_path]
     
     # Add optional parameters
     if 'speaker' in kwargs:
@@ -229,7 +229,7 @@ if generate_speech("Hello World", "output.wav", speaker=42, temperature=0.3):
 
 ### For Beginners
 1. Read [QUICKSTART.md](QUICKSTART.md)
-2. Run `./test_chartts.sh`
+2. Run `./test_chattts.sh`
 3. Try `./examples/simple_usage.sh`
 
 ### For Intermediate Users
@@ -238,19 +238,19 @@ if generate_speech("Hello World", "output.wav", speaker=42, temperature=0.3):
 3. Write your own batch processing scripts
 
 ### For Advanced Users
-1. Study `scripts/chartts` source code
+1. Study `scripts/chattts` source code
 2. Integrate into your own projects
 3. Contribute new features or examples
 
 ## 10. Get Help
 
 ```bash
-# View chartts help
-chartts --help
+# View chattts help
+chattts --help
 
 # View perftest help
 perftest --help
 
 # Verbose output (for debugging)
-chartts -t "Test" -o test.wav -v
+chattts -t "Test" -o test.wav -v
 ```

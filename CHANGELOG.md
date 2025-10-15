@@ -4,7 +4,7 @@
 
 ### New Features
 
-#### ChatTTS Command Line Client (`chartts`)
+#### ChatTTS Command Line Client (`chattts`)
 - ✨ Complete command line interface supporting text-to-speech
 - 📝 Support reading text from command line arguments or files
 - 🎤 Support custom speaker (voice control)
@@ -50,7 +50,7 @@
 
 ### Tests
 
-- ✅ `test_chartts.sh` - Complete functional test script
+- ✅ `test_chattts.sh` - Complete functional test script
 
 ### Tools
 
@@ -70,11 +70,11 @@ tts-benchmarks/
 ├── PERFTEST_FEATURES.md            # Perftest features guide
 ├── install.sh                      # Installation script
 ├── requirements.txt                # Python dependencies
-├── test_chartts.sh                 # Test script
+├── test_chattts.sh                 # Test script
 ├── tts-benchmark-example.json      # Benchmark configuration example
 ├── .gitignore                      # Git ignore file
 ├── scripts/
-│   ├── chartts                     # ChatTTS command line client
+│   ├── chattts                     # ChatTTS command line client
 │   └── perftest                    # Performance testing tool with resource monitoring
 └── examples/
     ├── README.md                   # Examples documentation

@@ -28,7 +28,7 @@ for input_file in input_texts/*.txt; do
     output_file="output_audio/${filename}.wav"
     
     echo "Processing: $input_file -> $output_file"
-    chartts -f "$input_file" -o "$output_file"
+    chattts -f "$input_file" -o "$output_file"
     
     ((counter++))
 done

@@ -4,7 +4,7 @@ Text-to-Speech (TTS) project performance benchmarking toolkit.
 
 ## ✨ Features
 
-- 🎯 **chartts**: ChatTTS command line client - Simple and easy-to-use CLI
+- 🎯 **chattts**: ChatTTS command line client - Simple and easy-to-use CLI
 - ⚡ **perftest**: Performance testing tool - Accurate comparison of different TTS engines
 - 📊 Support for batch processing and automated testing
 - 🔧 Rich configuration options and parameter tuning
@@ -21,10 +21,10 @@ pip install -r requirements.txt
 ./install.sh
 
 # 3. Generate your first speech
-chartts -t "Hello World" -o hello.wav
+chattts -t "Hello World" -o hello.wav
 
 # 4. Run tests
-./test_chartts.sh
+./test_chattts.sh
 ```
 
 For more information:
@@ -65,28 +65,28 @@ DST_PATH=/usr/local/bin ./install.sh
 
 ### ChatTTS Command Line Client
 
-`chartts` provides a command line interface for ChatTTS, making it easy for benchmarking and batch processing.
+`chattts` provides a command line interface for ChatTTS, making it easy for benchmarking and batch processing.
 
 #### Basic Usage
 
 ```bash
 # Direct text input
-chartts -t "Hello World" -o output.wav
+chattts -t "Hello World" -o output.wav
 
 # Read text from file
-chartts -f input.txt -o output.wav
+chattts -f input.txt -o output.wav
 
 # Specify speaker (voice control)
-chartts -t "Test speech" -o test.wav --speaker 123
+chattts -t "Test speech" -o test.wav --speaker 123
 
 # Adjust generation parameters
-chartts -t "Test speech" -o test.wav --temperature 0.3 --top-p 0.7
+chattts -t "Test speech" -o test.wav --temperature 0.3 --top-p 0.7
 
 # Use text refinement for better quality
-chartts -t "High quality speech" -o high_quality.wav --refine
+chattts -t "High quality speech" -o high_quality.wav --refine
 
 # Verbose output
-chartts -t "Test" -o test.wav -v
+chattts -t "Test" -o test.wav -v
 ```
 
 #### Parameter Reference
@@ -152,7 +152,7 @@ Create a configuration file `tts-benchmark.json`:
   "tests": [
     {
       "name": "ChatTTS",
-      "command": "chartts -t 'This is a test text' -o /tmp/chattts_test.wav"
+      "command": "chattts -t 'This is a test text' -o /tmp/chattts_test.wav"
     },
     {
       "name": "Other TTS Tool",
@@ -192,7 +192,7 @@ perftest -f tts-benchmark.json -o results.json
 ### Adding New TTS Clients
 
 1. Create a new executable script in the `scripts/` directory
-2. Follow the interface design similar to `chartts`
+2. Follow the interface design similar to `chattts`
 3. Run `./install.sh` to install
 
 ### Project Structure
@@ -203,7 +203,7 @@ tts-benchmarks/
 ├── requirements.txt    # Python dependencies
 ├── README.md          # This document
 └── scripts/
-    ├── chartts        # ChatTTS command line client
+    ├── chattts        # ChatTTS command line client
     └── perftest       # Performance testing tool
 ```
 
@@ -239,7 +239,7 @@ On first run, ChatTTS will automatically download model files (a few hundred MB)
 If you encounter CUDA or MPS unavailable errors, force CPU mode with `--device cpu`:
 
 ```bash
-chartts -t "Test" -o test.wav --device cpu
+chattts -t "Test" -o test.wav --device cpu
 ```
 
 ### Out of Memory

@@ -26,23 +26,23 @@ cat > "$TEMP_DIR/benchmark.json" << EOF
   "tests": [
     {
       "name": "Default Config",
-      "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/default.wav"
+      "command": "chattts -t '$TEST_TEXT' -o $TEMP_DIR/default.wav"
     },
     {
       "name": "Low Temperature",
-      "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/low_temp.wav --temperature 0.1"
+      "command": "chattts -t '$TEST_TEXT' -o $TEMP_DIR/low_temp.wav --temperature 0.1"
     },
     {
       "name": "High Temperature",
-      "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/high_temp.wav --temperature 0.5"
+      "command": "chattts -t '$TEST_TEXT' -o $TEMP_DIR/high_temp.wav --temperature 0.5"
     },
     {
       "name": "With Refine",
-      "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/refine.wav --refine"
+      "command": "chattts -t '$TEST_TEXT' -o $TEMP_DIR/refine.wav --refine"
     },
     {
       "name": "CPU Mode",
-      "command": "chartts -t '$TEST_TEXT' -o $TEMP_DIR/cpu.wav --device cpu"
+      "command": "chattts -t '$TEST_TEXT' -o $TEMP_DIR/cpu.wav --device cpu"
     }
   ]
 }

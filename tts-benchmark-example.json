@@ -4,19 +4,19 @@
   "tests": [
     {
       "name": "ChatTTS-Default",
-      "command": "chartts -t 'This is a test text for evaluating speech synthesis speed and quality.' -o /tmp/chattts_default.wav"
+      "command": "chattts -t 'This is a test text for evaluating speech synthesis speed and quality.' -o /tmp/chattts_default.wav"
     },
     {
       "name": "ChatTTS-LowTemp",
-      "command": "chartts -t 'This is a test text for evaluating speech synthesis speed and quality.' -o /tmp/chattts_low_temp.wav --temperature 0.1"
+      "command": "chattts -t 'This is a test text for evaluating speech synthesis speed and quality.' -o /tmp/chattts_low_temp.wav --temperature 0.1"
     },
     {
       "name": "ChatTTS-HighQuality",
-      "command": "chartts -t 'This is a test text for evaluating speech synthesis speed and quality.' -o /tmp/chattts_refine.wav --refine"
+      "command": "chattts -t 'This is a test text for evaluating speech synthesis speed and quality.' -o /tmp/chattts_refine.wav --refine"
     },
     {
       "name": "ChatTTS-CustomSpeaker",
-      "command": "chartts -t 'This is a test text for evaluating speech synthesis speed and quality.' -o /tmp/chattts_speaker.wav --speaker 42"
+      "command": "chattts -t 'This is a test text for evaluating speech synthesis speed and quality.' -o /tmp/chattts_speaker.wav --speaker 42"
     }
   ]
 }
