@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-dst_path=${DST_PATH:-~/.local/bin/}
+dst_path=${DST_PATH:-~/.local/bin}
 
 for file in $(ls -A ./scripts); do
     echo "Linked $file to $dst_path/$file"

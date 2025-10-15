@@ -1,12 +1,15 @@
-# TTS Benchmarks 依赖
+# TTS Benchmarks Dependencies
 
-# ChatTTS 及其依赖
+# ChatTTS and dependencies
 ChatTTS>=0.1.0
 torch>=2.0.0
 torchaudio>=2.0.0
 numpy>=1.24.0
 
-# 可选：加速和优化
+# Performance monitoring (required for perftest memory/CPU monitoring)
+psutil>=5.9.0
+
+# Optional: acceleration and optimization
 # transformers>=4.30.0
 # accelerate>=0.20.0
 

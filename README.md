@@ -115,7 +115,12 @@ chartts -t "Test" -o test.wav -v
 
 ### Performance Testing Tool
 
-`perftest` is used to test and compare the performance of multiple commands.
+`perftest` is used to test and compare the performance of multiple commands with detailed resource monitoring (memory and CPU usage).
+
+**Monitoring Methods** (auto-detected):
+- **GNU time -v** (Linux) - Most accurate, kernel-level statistics
+- **psutil** (Cross-platform) - Real-time sampling
+- **Time only** (Fallback) - Basic timing
 
 #### Basic Usage
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-性能测试工具 - 使用 /usr/bin/time 测试和比较多种命令的性能
+Performance Testing Tool - Test and compare performance of multiple commands
+Monitors time, memory, and CPU usage
 """
 
 import sys
@@ -8,26 +9,54 @@ import subprocess
 import argparse
 import json
 import re
+import platform
 import statistics
+import threading
 from pathlib import Path
 from typing import List, Dict, Tuple
 from dataclasses import dataclass, asdict
 import time as time_module
 
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    HAS_PSUTIL = False
+GNU_TIME_PATH = "/usr/local/bin/gtime" if platform.system() == "Darwin" else "/usr/bin/time"
+# Check if GNU time is available (supports -v flag)
+def has_gnu_time() -> bool:
+    """Check if GNU time with -v support is available"""
+    try:
+        result = subprocess.run(
+            [GNU_TIME_PATH, '-v', 'echo', 'test'],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+        # GNU time puts output in stderr and includes specific markers
+        return 'Maximum resident set size' in result.stderr
+    except Exception:
+        return False
+
+HAS_GNU_TIME = has_gnu_time()
+
 @dataclass
 class TimeResult:
-    """时间测试结果"""
-    real: float  # 实际运行时间（秒）
-    user: float  # 用户态CPU时间（秒）
-    sys: float   # 内核态CPU时间（秒）
+    """Test result with resource usage"""
+    real: float  # Wall clock time (seconds)
+    user: float  # User CPU time (seconds)
+    sys: float   # System CPU time (seconds)
+    max_memory: float = 0.0  # Maximum memory usage (MB)
+    avg_cpu_percent: float = 0.0  # Average CPU usage (%)
+    max_cpu_percent: float = 0.0  # Maximum CPU usage (%)
     
     def total_cpu(self) -> float:
-        """总CPU时间"""
+        """Total CPU time"""
         return self.user + self.sys
 
 @dataclass
 class TestResult:
-    """测试结果"""
+    """Test result"""
     name: str
     command: str
     runs: List[TimeResult]
@@ -54,6 +83,23 @@ class TestResult:
     
     def max_real(self) -> float:
         return max([r.real for r in self.runs]) if self.runs else 0
+    
+    # Memory statistics
+    def avg_max_memory(self) -> float:
+        return statistics.mean([r.max_memory for r in self.runs]) if self.runs else 0
+    
+    def max_memory_usage(self) -> float:
+        return max([r.max_memory for r in self.runs]) if self.runs else 0
+    
+    def min_memory_usage(self) -> float:
+        return min([r.max_memory for r in self.runs]) if self.runs else 0
+    
+    # CPU statistics
+    def avg_cpu_usage(self) -> float:
+        return statistics.mean([r.avg_cpu_percent for r in self.runs]) if self.runs else 0
+    
+    def max_cpu_usage(self) -> float:
+        return max([r.max_cpu_percent for r in self.runs]) if self.runs else 0
 
 
 class Colors:
@@ -82,24 +128,112 @@ class Colors:
         Colors.END = ''
 
 
-def parse_time_output(output: str) -> TimeResult:
-    """解析 /usr/bin/time 的输出"""
-    # macOS 和 Linux 的 time 输出格式可能不同
+class ResourceMonitor:
+    """Monitor process resource usage in background"""
+    def __init__(self):
+        self.max_memory = 0.0
+        self.cpu_samples = []
+        self.running = False
+        self.thread = None
+        
+    def _monitor(self, pid):
+        """Monitor thread function"""
+        try:
+            process = psutil.Process(pid)
+            while self.running:
+                try:
+                    # Get memory usage in MB
+                    mem_info = process.memory_info()
+                    memory_mb = mem_info.rss / (1024 * 1024)
+                    self.max_memory = max(self.max_memory, memory_mb)
+                    
+                    # Get CPU usage
+                    cpu_percent = process.cpu_percent(interval=0.1)
+                    if cpu_percent > 0:  # Ignore zero readings
+                        self.cpu_samples.append(cpu_percent)
+                    
+                    time_module.sleep(0.1)
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    break
+        except Exception:
+            pass
+    
+    def start(self, pid):
+        """Start monitoring"""
+        self.running = True
+        self.thread = threading.Thread(target=self._monitor, args=(pid,), daemon=True)
+        self.thread.start()
+    
+    def stop(self):
+        """Stop monitoring and return results"""
+        self.running = False
+        if self.thread:
+            self.thread.join(timeout=1.0)
+        
+        avg_cpu = statistics.mean(self.cpu_samples) if self.cpu_samples else 0.0
+        max_cpu = max(self.cpu_samples) if self.cpu_samples else 0.0
+        
+        return self.max_memory, avg_cpu, max_cpu
+
+
+def parse_gnu_time_verbose(output: str) -> Tuple[float, float, float, float, float]:
+    """Parse GNU time -v output to extract detailed metrics"""
+    real = user = sys = max_memory = cpu_percent = 0.0
+    
+    # Parse user time: "User time (seconds): 123.45"
+    user_match = re.search(r'User time \(seconds\):\s*(\d+\.?\d*)', output)
+    if user_match:
+        user = float(user_match.group(1))
+    
+    # Parse system time: "System time (seconds): 12.34"
+    sys_match = re.search(r'System time \(seconds\):\s*(\d+\.?\d*)', output)
+    if sys_match:
+        sys = float(sys_match.group(1))
+    
+    # Parse elapsed time: "Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.01" or "1:23:45.67"
+    # Formats: h:mm:ss.ss, m:ss.ss, or 0:ss.ss
+    # The pattern needs to handle the descriptive part with colons: "(h:mm:ss or m:ss)"
+    elapsed_match = re.search(r'Elapsed.*?:\s*(?:(\d+):)?(\d+):(\d+\.?\d*)', output)
+    if elapsed_match:
+        hours = int(elapsed_match.group(1)) if elapsed_match.group(1) else 0
+        minutes = int(elapsed_match.group(2))
+        seconds = float(elapsed_match.group(3))
+        real = hours * 3600 + minutes * 60 + seconds
+    
+    # Parse maximum resident set size: "Maximum resident set size (kbytes): 123456"
+    mem_match = re.search(r'Maximum resident set size \(kbytes\):\s*(\d+)', output)
+    if mem_match:
+        max_memory = float(mem_match.group(1)) / 1024.0  # Convert KB to MB
+    
+    # Parse CPU percentage: "Percent of CPU this job got: 95%"
+    cpu_match = re.search(r'Percent of CPU this job got:\s*(\d+)%', output)
+    if cpu_match:
+        cpu_percent = float(cpu_match.group(1))
+    
+    return real, user, sys, max_memory, cpu_percent
+
+
+def parse_time_output(output: str) -> Tuple[float, float, float, float, float]:
+    """Parse /usr/bin/time output to extract timing and resource info"""
+    # First try to parse GNU time verbose format (-v flag)
+    if 'Maximum resident set size' in output:
+        return parse_gnu_time_verbose(output)
+    
+    # Fallback to simple formats
+    real = user = sys = max_memory = cpu_percent = 0.0
+    
+    # Try to match macOS format
     # macOS: "0.00 real         0.00 user         0.00 sys"
-    # Linux: "0.00user 0.00system 0:00.00elapsed"
-    
-    real = user = sys = 0.0
-    
-    # 尝试匹配 macOS 格式
     mac_pattern = r'(\d+\.\d+)\s+real\s+(\d+\.\d+)\s+user\s+(\d+\.\d+)\s+sys'
     match = re.search(mac_pattern, output)
     if match:
         real = float(match.group(1))
         user = float(match.group(2))
         sys = float(match.group(3))
-        return TimeResult(real, user, sys)
+        return real, user, sys, max_memory, cpu_percent
     
-    # 尝试匹配 Linux 格式
+    # Try to match Linux simple format
+    # Linux: "0.00user 0.00system 0:00.00elapsed"
     linux_pattern = r'(\d+\.\d+)user\s+(\d+\.\d+)system\s+(\d+):(\d+\.\d+)elapsed'
     match = re.search(linux_pattern, output)
     if match:
@@ -108,9 +242,9 @@ def parse_time_output(output: str) -> TimeResult:
         minutes = int(match.group(3))
         seconds = float(match.group(4))
         real = minutes * 60 + seconds
-        return TimeResult(real, user, sys)
+        return real, user, sys, max_memory, cpu_percent
     
-    # 尝试更通用的模式
+    # Try more generic patterns
     real_match = re.search(r'(\d+\.\d+)\s*(?:real|elapsed)', output, re.IGNORECASE)
     user_match = re.search(r'(\d+\.\d+)\s*user', output, re.IGNORECASE)
     sys_match = re.search(r'(\d+\.\d+)\s*sys(?:tem)?', output, re.IGNORECASE)
@@ -122,16 +256,28 @@ def parse_time_output(output: str) -> TimeResult:
     if sys_match:
         sys = float(sys_match.group(1))
     
-    return TimeResult(real, user, sys)
+    return real, user, sys, max_memory, cpu_percent
 
 
-def run_command_with_time(command: str, shell: bool = True, debug: bool = False) -> Tuple[TimeResult, bool, str]:
-    """使用 /usr/bin/time 运行命令"""
-    time_cmd = f"/usr/bin/time {command}" if shell else ["/usr/bin/time"] + command.split()
+def run_command_with_time(command: str, shell: bool = True, debug: bool = False, monitor_resources: bool = True, use_gnu_time: bool = True) -> Tuple[TimeResult, bool, str]:
+    """Run command with /usr/bin/time and optionally monitor resources
+    
+    Args:
+        command: Command to run
+        shell: Use shell to run command
+        debug: Show debug output
+        monitor_resources: Enable resource monitoring with psutil
+        use_gnu_time: Use GNU time -v for detailed stats (recommended on Linux)
+    """
+    # Use GNU time -v if available (provides memory and CPU info)
+    if use_gnu_time:
+        time_cmd = f"{GNU_TIME_PATH} -v {command}" if shell else [GNU_TIME_PATH, "-v"] + command.split()
+    else:
+        time_cmd = f"{GNU_TIME_PATH} {command}" if shell else [GNU_TIME_PATH] + command.split()
     
     try:
-        # /usr/bin/time 的输出通常在 stderr
-        result = subprocess.run(
+        # Start the process
+        process = subprocess.Popen(
             time_cmd,
             shell=shell,
             stdout=subprocess.PIPE,
@@ -139,24 +285,80 @@ def run_command_with_time(command: str, shell: bool = True, debug: bool = False)
             text=True
         )
         
+        # Start resource monitoring if psutil is available and requested
+        # This provides real-time average, while GNU time provides final stats
+        psutil_max_memory = 0.0
+        psutil_avg_cpu = 0.0
+        psutil_max_cpu = 0.0
+        
+        if HAS_PSUTIL and monitor_resources:
+            monitor = ResourceMonitor()
+            monitor.start(process.pid)
+        else:
+            monitor = None
+        
+        # Wait for process to complete
+        _stdout, stderr = process.communicate()
+        
+        # Stop monitoring and get psutil stats
+        if monitor:
+            psutil_max_memory, psutil_avg_cpu, psutil_max_cpu = monitor.stop()
+        
         if debug:
-            print(f"  DEBUG - time stderr output:\n{result.stderr}")
+            print(f"  DEBUG - time stderr output:\n{stderr}")
         
-        # 解析 time 输出
-        time_result = parse_time_output(result.stderr)
+        # Parse time output (GNU time -v provides memory and CPU info)
+        real, user, sys, gnu_max_memory, gnu_cpu_percent = parse_time_output(stderr)
+        
+        # Use GNU time stats if available, otherwise fall back to psutil
+        # GNU time is generally more accurate as it's kernel-level
+        max_memory = gnu_max_memory if gnu_max_memory > 0 else psutil_max_memory
+        
+        # For CPU, GNU time gives overall percentage, psutil gives average
+        # Use GNU time if available, otherwise use psutil average
+        if gnu_cpu_percent > 0:
+            avg_cpu_percent = gnu_cpu_percent
+            max_cpu_percent = gnu_cpu_percent  # GNU time only gives one value
+        else:
+            avg_cpu_percent = psutil_avg_cpu
+            max_cpu_percent = psutil_max_cpu
+        
+        # Create result with all metrics
+        time_result = TimeResult(
+            real=real,
+            user=user,
+            sys=sys,
+            max_memory=max_memory,
+            avg_cpu_percent=avg_cpu_percent,
+            max_cpu_percent=max_cpu_percent
+        )
         
         if debug:
-            print(f"  DEBUG - parsed result: real={time_result.real}, user={time_result.user}, sys={time_result.sys}")
+            print(f"  DEBUG - parsed result: real={time_result.real:.3f}s, "
+                  f"user={time_result.user:.3f}s, sys={time_result.sys:.3f}s, "
+                  f"mem={time_result.max_memory:.1f}MB, cpu={time_result.avg_cpu_percent:.1f}%")
+            if gnu_max_memory > 0:
+                print(f"  DEBUG - using GNU time stats (mem={gnu_max_memory:.1f}MB, cpu={gnu_cpu_percent:.1f}%)")
+            elif psutil_max_memory > 0:
+                print(f"  DEBUG - using psutil stats (mem={psutil_max_memory:.1f}MB, cpu={psutil_avg_cpu:.1f}%)")
         
-        return time_result, result.returncode == 0, ""
+        return time_result, process.returncode == 0, ""
         
     except Exception as e:
-        return TimeResult(0, 0, 0), False, str(e)
+        return TimeResult(0, 0, 0, 0, 0, 0), False, str(e)
 
 
-def run_test(name: str, command: str, iterations: int, verbose: bool = False, debug: bool = False) -> TestResult:
-    """运行性能测试"""
-    print(f"{Colors.CYAN}测试 [{name}]: {Colors.END}{command}")
+def run_test(name: str, command: str, iterations: int, verbose: bool = False, debug: bool = False, monitor_resources: bool = True) -> TestResult:
+    """Run performance test"""
+    print(f"{Colors.CYAN}Test [{name}]: {Colors.END}{command}")
+    
+    # Show info about monitoring capabilities on first iteration
+    if iterations == 1 and not debug:
+        if HAS_GNU_TIME:
+            if verbose:
+                print(f"  {Colors.GREEN}Using GNU time for accurate resource monitoring{Colors.END}")
+        elif monitor_resources and not HAS_PSUTIL:
+            print(f"  {Colors.YELLOW}Note: Install psutil for memory/CPU monitoring (pip install psutil){Colors.END}")
     
     runs = []
     success = True
@@ -164,115 +366,151 @@ def run_test(name: str, command: str, iterations: int, verbose: bool = False, de
     
     for i in range(iterations):
         if verbose:
-            print(f"  运行 {i+1}/{iterations}...", end=' ', flush=True)
+            print(f"  Run {i+1}/{iterations}...", end=' ', flush=True)
         
-        time_result, cmd_success, error = run_command_with_time(command, debug=debug)
+        # Use GNU time if available (most accurate), otherwise try psutil
+        time_result, cmd_success, error = run_command_with_time(
+            command, 
+            debug=debug, 
+            monitor_resources=monitor_resources,
+            use_gnu_time=HAS_GNU_TIME
+        )
         
         if not cmd_success:
             success = False
-            error_msg = error or "命令执行失败"
+            error_msg = error or "Command execution failed"
             if verbose:
                 print(f"{Colors.RED}✗{Colors.END}")
             break
         
         runs.append(time_result)
         if verbose:
-            print(f"{Colors.GREEN}✓{Colors.END} ({time_result.real:.3f}s)")
+            mem_str = f", mem={time_result.max_memory:.1f}MB" if time_result.max_memory > 0 else ""
+            cpu_str = f", cpu={time_result.avg_cpu_percent:.1f}%" if time_result.avg_cpu_percent > 0 else ""
+            print(f"{Colors.GREEN}✓{Colors.END} ({time_result.real:.3f}s{mem_str}{cpu_str})")
     
     if not verbose and success:
-        print(f"  {Colors.GREEN}完成 {iterations} 次运行{Colors.END}")
+        print(f"  {Colors.GREEN}Completed {iterations} runs{Colors.END}")
     elif not success:
-        print(f"  {Colors.RED}失败: {error_msg}{Colors.END}")
+        print(f"  {Colors.RED}Failed: {error_msg}{Colors.END}")
     
     return TestResult(name, command, runs, success, error_msg)
 
 
 def print_summary(results: List[TestResult]):
-    """打印测试摘要"""
-    print(f"\n{Colors.BOLD}{Colors.HEADER}{'='*80}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.HEADER}性能测试摘要{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.HEADER}{'='*80}{Colors.END}\n")
+    """Print test summary with memory and CPU usage"""
+    print(f"\n{Colors.BOLD}{Colors.HEADER}{'='*100}{Colors.END}")
+    print(f"{Colors.BOLD}{Colors.HEADER}Performance Test Summary{Colors.END}")
+    print(f"{Colors.BOLD}{Colors.HEADER}{'='*100}{Colors.END}\n")
     
-    # 过滤成功的结果
+    # Filter successful results
     successful_results = [r for r in results if r.success and r.runs]
     
     if not successful_results:
-        print(f"{Colors.RED}所有测试都失败了或没有有效的测试结果{Colors.END}")
+        print(f"{Colors.RED}All tests failed or no valid test results{Colors.END}")
         return
     
-    # 过滤掉时间为0的结果（time解析失败）
+    # Filter out results with zero time (time parsing failed)
     valid_results = [r for r in successful_results if r.avg_real() > 0]
     
     if not valid_results:
-        print(f"{Colors.RED}无法解析时间数据，请检查 /usr/bin/time 的输出格式{Colors.END}")
-        print(f"{Colors.YELLOW}提示: 某些系统的 time 命令格式可能不同{Colors.END}")
+        print(f"{Colors.RED}Cannot parse time data, please check /usr/bin/time output format{Colors.END}")
+        print(f"{Colors.YELLOW}Note: Different systems may have different time command formats{Colors.END}")
         return
     
-    # 找出最快的
+    # Find fastest
     fastest = min(valid_results, key=lambda r: r.avg_real())
     
-    # 打印结果表格
-    print(f"{Colors.BOLD}{'名称':<20} {'实际时间':<15} {'用户时间':<15} {'系统时间':<15} {'相对速度':<10}{Colors.END}")
-    print("-" * 80)
+    # Check if resource monitoring was used
+    has_memory = any(r.avg_max_memory() > 0 for r in valid_results)
+    has_cpu = any(r.avg_cpu_usage() > 0 for r in valid_results)
     
-    for result in sorted(valid_results, key=lambda r: r.avg_real()):
-        relative_speed = result.avg_real() / fastest.avg_real()
-        color = Colors.GREEN if result == fastest else Colors.END
+    # Print results table with resource usage
+    if has_memory or has_cpu:
+        print(f"{Colors.BOLD}{'Name':<18} {'Time':<14} {'Memory':<12} {'CPU':<10} {'Relative':<10}{Colors.END}")
+        print("-" * 100)
         
-        name_str = result.name[:18] + ".." if len(result.name) > 20 else result.name
-        real_str = f"{result.avg_real():.3f}s ±{result.std_real():.3f}"
-        user_str = f"{result.avg_user():.3f}s"
-        sys_str = f"{result.avg_sys():.3f}s"
-        rel_str = f"{relative_speed:.2f}x"
+        for result in sorted(valid_results, key=lambda r: r.avg_real()):
+            relative_speed = result.avg_real() / fastest.avg_real()
+            color = Colors.GREEN if result == fastest else Colors.END
+            
+            name_str = result.name[:16] + ".." if len(result.name) > 18 else result.name
+            real_str = f"{result.avg_real():.2f}s ±{result.std_real():.2f}"
+            mem_str = f"{result.avg_max_memory():.1f}MB" if has_memory else "N/A"
+            cpu_str = f"{result.avg_cpu_usage():.1f}%" if has_cpu else "N/A"
+            rel_str = f"{relative_speed:.2f}x"
+            
+            print(f"{color}{name_str:<18} {real_str:<14} {mem_str:<12} {cpu_str:<10} {rel_str:<10}{Colors.END}")
+    else:
+        print(f"{Colors.BOLD}{'Name':<20} {'Real Time':<15} {'User Time':<15} {'Sys Time':<15} {'Relative':<10}{Colors.END}")
+        print("-" * 100)
         
-        print(f"{color}{name_str:<20} {real_str:<15} {user_str:<15} {sys_str:<15} {rel_str:<10}{Colors.END}")
+        for result in sorted(valid_results, key=lambda r: r.avg_real()):
+            relative_speed = result.avg_real() / fastest.avg_real()
+            color = Colors.GREEN if result == fastest else Colors.END
+            
+            name_str = result.name[:18] + ".." if len(result.name) > 20 else result.name
+            real_str = f"{result.avg_real():.3f}s ±{result.std_real():.3f}"
+            user_str = f"{result.avg_user():.3f}s"
+            sys_str = f"{result.avg_sys():.3f}s"
+            rel_str = f"{relative_speed:.2f}x"
+            
+            print(f"{color}{name_str:<20} {real_str:<15} {user_str:<15} {sys_str:<15} {rel_str:<10}{Colors.END}")
     
-    # 打印详细统计
-    print(f"\n{Colors.BOLD}详细统计:{Colors.END}")
+    # Print detailed statistics
+    print(f"\n{Colors.BOLD}Detailed Statistics:{Colors.END}")
     for result in sorted(valid_results, key=lambda r: r.avg_real()):
         print(f"\n{Colors.CYAN}{Colors.BOLD}[{result.name}]{Colors.END}")
-        print(f"  命令: {result.command}")
-        print(f"  平均实际时间: {result.avg_real():.3f}s (最小: {result.min_real():.3f}s, 最大: {result.max_real():.3f}s)")
-        print(f"  平均用户时间: {result.avg_user():.3f}s")
-        print(f"  平均系统时间: {result.avg_sys():.3f}s")
-        print(f"  平均CPU时间:  {result.avg_total_cpu():.3f}s")
+        print(f"  Command: {result.command}")
+        print(f"  Avg Real Time: {result.avg_real():.3f}s (min: {result.min_real():.3f}s, max: {result.max_real():.3f}s)")
+        print(f"  Avg User Time: {result.avg_user():.3f}s")
+        print(f"  Avg Sys Time:  {result.avg_sys():.3f}s")
+        print(f"  Avg CPU Time:  {result.avg_total_cpu():.3f}s")
+        
+        if has_memory:
+            print(f"  Avg Max Memory: {result.avg_max_memory():.1f}MB (max: {result.max_memory_usage():.1f}MB)")
+        
+        if has_cpu:
+            print(f"  Avg CPU Usage: {result.avg_cpu_usage():.1f}% (max: {result.max_cpu_usage():.1f}%)")
+        
         if len(result.runs) > 1:
-            print(f"  标准差: {result.std_real():.3f}s")
+            print(f"  Std Dev: {result.std_real():.3f}s")
         
         relative_to_fastest = result.avg_real() / fastest.avg_real()
         if result == fastest:
-            print(f"  {Colors.GREEN}🏆 最快!{Colors.END}")
+            print(f"  {Colors.GREEN}🏆 Fastest!{Colors.END}")
         else:
             slower_percent = (relative_to_fastest - 1) * 100
-            print(f"  比最快慢 {slower_percent:.1f}% ({relative_to_fastest:.2f}x)")
+            print(f"  {slower_percent:.1f}% slower than fastest ({relative_to_fastest:.2f}x)")
     
-    # 打印失败的测试
+    # Print failed tests
     failed_results = [r for r in results if not r.success]
     if failed_results:
-        print(f"\n{Colors.RED}{Colors.BOLD}失败的测试:{Colors.END}")
+        print(f"\n{Colors.RED}{Colors.BOLD}Failed Tests:{Colors.END}")
         for result in failed_results:
             print(f"  {Colors.RED}✗{Colors.END} [{result.name}]: {result.error_msg}")
 
 
 def load_config(config_file: str) -> Dict:
-    """加载配置文件"""
+    """Load configuration file"""
     config_path = Path(config_file)
     if not config_path.exists():
-        print(f"{Colors.RED}错误: 配置文件不存在: {config_file}{Colors.END}")
+        print(f"{Colors.RED}Error: Configuration file does not exist: {config_file}{Colors.END}")
         sys.exit(1)
     
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except json.JSONDecodeError as e:
-        print(f"{Colors.RED}错误: 配置文件格式错误: {e}{Colors.END}")
+        print(f"{Colors.RED}Error: Invalid configuration file format: {e}{Colors.END}")
         sys.exit(1)
 
 
 def save_results_json(results: List[TestResult], output_file: str):
-    """保存结果为 JSON"""
+    """Save results to JSON with resource usage data"""
     data = {
         "timestamp": time_module.strftime("%Y-%m-%d %H:%M:%S"),
+        "has_resource_monitoring": HAS_PSUTIL,
         "results": [
             {
                 "name": r.name,
@@ -285,6 +523,10 @@ def save_results_json(results: List[TestResult], output_file: str):
                 "std_real": r.std_real(),
                 "min_real": r.min_real(),
                 "max_real": r.max_real(),
+                "avg_max_memory_mb": r.avg_max_memory(),
+                "max_memory_mb": r.max_memory_usage(),
+                "avg_cpu_percent": r.avg_cpu_usage(),
+                "max_cpu_percent": r.max_cpu_usage(),
                 "runs": [asdict(run) for run in r.runs]
             }
             for r in results
@@ -294,13 +536,13 @@ def save_results_json(results: List[TestResult], output_file: str):
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     
-    print(f"\n{Colors.GREEN}结果已保存到: {output_file}{Colors.END}")
+    print(f"\n{Colors.GREEN}Results saved to: {output_file}{Colors.END}")
 
 
 def create_sample_config(filename: str):
-    """创建示例配置文件"""
+    """Create sample configuration file"""
     sample_config = {
-        "description": "性能测试配置示例",
+        "description": "Performance test configuration example",
         "iterations": 3,
         "tests": [
             {
@@ -321,66 +563,69 @@ def create_sample_config(filename: str):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(sample_config, f, indent=2, ensure_ascii=False)
     
-    print(f"{Colors.GREEN}示例配置文件已创建: {filename}{Colors.END}")
+    print(f"{Colors.GREEN}Sample configuration file created: {filename}{Colors.END}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="性能测试工具 - 使用 /usr/bin/time 测试和比较多种命令的性能",
+        description="Performance Testing Tool - Test and compare command performance with memory/CPU monitoring",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-示例:
-  # 从命令行指定命令
+Examples:
+  # Specify commands from command line
   %(prog)s -c "sleep 1" -c "sleep 0.5" -n 3
   
-  # 使用配置文件
+  # Use configuration file
   %(prog)s -f config.json
   
-  # 创建示例配置文件
+  # Create sample configuration file
   %(prog)s --sample-config perftest.json
   
-  # 指定命令名称
+  # Specify command names
   %(prog)s -t "slow,sleep 1" -t "fast,sleep 0.5" -n 5 -v
   
-  # 保存结果
+  # Save results
   %(prog)s -f config.json -o results.json
+
+Note: Install psutil for memory and CPU usage monitoring:
+  pip install psutil
         """
     )
     
     parser.add_argument('-c', '--command', action='append', dest='commands',
-                        help='要测试的命令（可多次指定）')
+                        help='Command to test (can be specified multiple times)')
     parser.add_argument('-t', '--test', action='append', dest='tests',
-                        help='命名测试，格式: "名称,命令"（可多次指定）')
+                        help='Named test, format: "name,command" (can be specified multiple times)')
     parser.add_argument('-f', '--config', dest='config_file',
-                        help='从 JSON 配置文件加载测试')
+                        help='Load tests from JSON configuration file')
     parser.add_argument('-n', '--iterations', type=int, default=3,
-                        help='每个命令运行的次数（默认: 3）')
+                        help='Number of times to run each command (default: 3)')
     parser.add_argument('-o', '--output', dest='output_file',
-                        help='保存结果到 JSON 文件')
+                        help='Save results to JSON file')
     parser.add_argument('-v', '--verbose', action='store_true',
-                        help='详细输出每次运行的结果')
+                        help='Verbose output for each run')
     parser.add_argument('--debug', action='store_true',
-                        help='调试模式，显示 time 命令的原始输出')
+                        help='Debug mode, show raw time command output')
     parser.add_argument('--no-color', action='store_true',
-                        help='禁用彩色输出')
+                        help='Disable colored output')
     parser.add_argument('--sample-config', dest='sample_config',
-                        help='创建示例配置文件')
+                        help='Create sample configuration file')
     
     args = parser.parse_args()
     
-    # 禁用颜色
+    # Disable colors
     if args.no_color:
         Colors.disable()
     
-    # 创建示例配置
+    # Create sample configuration
     if args.sample_config:
         create_sample_config(args.sample_config)
         return
     
-    # 收集测试任务
+    # Collect test tasks
     tests = []
     
-    # 从命令行参数
+    # From command line arguments
     if args.commands:
         for i, cmd in enumerate(args.commands):
             tests.append({
@@ -388,48 +633,58 @@ def main():
                 'command': cmd
             })
     
-    # 从命名测试
+    # From named tests
     if args.tests:
         for test_str in args.tests:
             parts = test_str.split(',', 1)
             if len(parts) != 2:
-                print(f"{Colors.RED}错误: 测试格式错误: {test_str}{Colors.END}")
-                print(f"应该是: '名称,命令'")
+                print(f"{Colors.RED}Error: Invalid test format: {test_str}{Colors.END}")
+                print("Should be: 'name,command'")
                 sys.exit(1)
             tests.append({
                 'name': parts[0].strip(),
                 'command': parts[1].strip()
             })
     
-    # 从配置文件
+    # From configuration file
     if args.config_file:
         config = load_config(args.config_file)
         if 'tests' in config:
             tests.extend(config['tests'])
-        if 'iterations' in config and not args.iterations != 3:  # 如果没有命令行指定
+        if 'iterations' in config and args.iterations == 3:  # If not specified on command line
             args.iterations = config['iterations']
     
-    # 验证
+    # Validation
     if not tests:
         parser.print_help()
-        print(f"\n{Colors.RED}错误: 请至少指定一个测试命令{Colors.END}")
+        print(f"\n{Colors.RED}Error: Please specify at least one test command{Colors.END}")
         sys.exit(1)
     
-    # 打印测试信息
-    print(f"{Colors.BOLD}{Colors.HEADER}性能测试工具{Colors.END}")
-    print(f"总共 {len(tests)} 个测试，每个运行 {args.iterations} 次\n")
+    # Print test information
+    print(f"{Colors.BOLD}{Colors.HEADER}Performance Testing Tool{Colors.END}")
     
-    # 运行测试
+    # Show monitoring capabilities
+    if HAS_GNU_TIME:
+        print(f"{Colors.GREEN}✓ Resource monitoring: GNU time -v (most accurate){Colors.END}")
+    elif HAS_PSUTIL:
+        print(f"{Colors.GREEN}✓ Resource monitoring: psutil (real-time sampling){Colors.END}")
+    else:
+        print(f"{Colors.YELLOW}⚠ Resource monitoring disabled{Colors.END}")
+        print(f"{Colors.YELLOW}  Tip: Install GNU time or psutil for memory/CPU monitoring{Colors.END}")
+    
+    print(f"Total {len(tests)} tests, each running {args.iterations} times\n")
+    
+    # Run tests
     results = []
     for i, test in enumerate(tests, 1):
         print(f"\n{Colors.BOLD}[{i}/{len(tests)}]{Colors.END}")
         result = run_test(test['name'], test['command'], args.iterations, args.verbose, args.debug)
         results.append(result)
     
-    # 打印摘要
+    # Print summary
     print_summary(results)
     
-    # 保存结果
+    # Save results
     if args.output_file:
         save_results_json(results, args.output_file)
 
@@ -438,6 +693,6 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        print(f"\n{Colors.YELLOW}测试被中断{Colors.END}")
+        print(f"\n{Colors.YELLOW}Test interrupted{Colors.END}")
         sys.exit(130)
 
